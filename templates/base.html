@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать!</title>
+    {% block styles %}
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgb(37, 37, 37);
+                color: white;
+                font-family: 'Trebuchet MS';
+                overflow: hidden;
+            }
+
+            ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color: rgba(0, 0, 0, 0);
+                position: fixed;
+                top: 0;
+                width: 100%;
+                z-index: 10;
+            }
+
+            li {
+                float: left;
+            }
+
+            li a {
+                display: block;
+                color: white;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+            }
+
+            .card {
+                position: absolute;
+                font-size: 30px;
+                animation-duration: 7s;
+                animation-timing-function: linear;
+                user-select: none;
+                z-index: 1;
+            }
+
+            @keyframes moveCard {
+                0% {
+                    transform: translate(0, 0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(var(--end-x), var(--end-y));
+                    opacity: 1;
+                }
+            }
+        </style>
+    {% endblock %}
+</head>
+<body>
+    <ul>
+        <li style="float: right"><a class="active" href="/jwt/register">Зарегистрироваться</a></li>
+        <li style="float: left"><a class="active" href="/">На главную</a></li>
+        <li style="float: left"><a class="active" href="/jwt/login/">Войти</a></li>
+        <li style="float: right"><a class="active" href="/about_us">О нас</a></li>
+    </ul>
+    
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block scripts %}
+        <script>
+            function createCard(symbol) {
+                const startX = Math.random() < 0.5 ? -50 : window.innerWidth + 50;
+                const startY = Math.random() * window.innerHeight;
+
+                const endX = Math.random() * window.innerWidth;
+                const endY = Math.random() * window.innerHeight;
+
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.textContent = symbol;
+                card.style.left = `${startX}px`;
+                card.style.top = `${startY}px`;
+                card.style.setProperty('--end-x', `${endX - startX}px`);
+                card.style.setProperty('--end-y', `${endY - startY}px`);
+                card.style.animationName = 'moveCard';
+
+                document.body.appendChild(card);
+            }
+
+            const suits = ['♥', '♦', '♠', '♣'];
+
+            setInterval(() => {
+                createCard(suits[Math.floor(Math.random() * suits.length)]);
+            }, 1000);
+        </script>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,159 @@
+{% extends "authenticated.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .table-list {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .table-list th, .table-list td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            z-index: 10;
+        }
+
+        .table-list th {
+            background-color: #555;
+            z-index: 10;
+        }
+
+        .table-list tr {
+            cursor: pointer;
+        }
+
+        .search-container {
+            margin-top: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .search-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f2f2f2;
+            margin-right: 10px;
+            z-index: 10;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .search-container button:hover {
+            background-color: #505050;
+            z-index: 10;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="search-container">
+        <h2>Поиск столов</h2>
+        <form method="POST" action="/authenticated/search">
+            <input type="text" name="query" placeholder="Введите название стола" required>
+            <button type="submit">Поиск</button>
+        </form>
+    </div>
+
+    <div class="table-list-container">
+        <h3 style="text-align: center;">Все столы</h3>
+        <table class="table-list">
+            <thead>
+                <tr>
+                    <th>Название стола</th>
+                    <th>Big blind</th>
+                    <th>Small blind</th>
+                    <th>Начальный капитал</th>
+                    <th>Количество игроков</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables %}
+                    <tr data-table-id="{{ table.id }}" onclick="joinGame(this)">
+                        <td>{{ table.name }}</td>
+                        <td>{{ table.big_blind }}</td>
+                        <td>{{ table.small_blind }}</td>
+                        <td>{{ table.start_money }}</td>
+                        <td id="player-count-{{ table.id }}">{{ table.player_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        function updatePlayerCount(tableId) {
+            if (!tableId) return;
+            const playerCountElement = document.getElementById(`player-count-${tableId}`);
+
+            if (!playerCountElement) return;
+
+            fetch(`/api/v1/authenticated/get_players/${tableId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(`Количество игроков для стола ${tableId}:`, data.player_count);
+                    if (playerCountElement) {
+                        playerCountElement.textContent = data.player_count;
+                    }
+                })
+                .catch(error => console.error("Ошибка при обновлении количества игроков:", error));
+        }
+
+        function startPlayerCountUpdates() {
+            const tableRows = document.querySelectorAll('.table-list tr');
+
+            tableRows.forEach(row => {
+                const tableId = row.getAttribute('data-table-id');
+                if (tableId) {
+                    updatePlayerCount(tableId);
+
+                    setInterval(() => updatePlayerCount(tableId), 5000);
+                }
+            });
+        }
+
+        window.onload = startPlayerCountUpdates;
+
+
+        function joinGame(row) {
+            const tableId = row.getAttribute('data-table-id');
+            const socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
+
+            socket.onopen = function() {
+                console.log("Подключение к игре установлено");
+                window.location.href = `/authenticated/game/${tableId}`;
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("Получено сообщение от сервера:", data);
+            };
+
+            socket.onerror = function(error) {
+                console.log("Ошибка WebSocket:", error);
+            };
+
+            socket.onclose = function(event) {
+                console.log("Соединение с сервером закрыто", event);
+            };
+        }
+    </script>
+{% endblock %}

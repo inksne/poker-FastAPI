@@ -1,0 +1,57 @@
+{% extends "authenticated.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .button {
+            padding: 20px 40px;
+            font-size: 1.2em;
+            background-color: dimgray;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            text-decoration: none;
+            width: 200px;
+            z-index: 10;
+        }
+
+        .button:hover {
+            background-color: #505050;
+        }
+
+        .button:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .button {
+                font-size: 1em;
+                padding: 15px 30px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="buttons-container">
+        <a href="/authenticated/create_table" class="button">Создать стол</a>
+        <a href="/authenticated/search" class="button">Поиск</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

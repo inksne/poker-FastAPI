@@ -1,0 +1,65 @@
+{% extends "authenticated.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        #playersList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #playersList p {
+            margin: 5px 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h2>Игра за столом: {{ table.name }}</h2>
+    <p>Игроки за столом:</p>
+    {% for player in players %}
+        <p style="text-align: center;">{{ player.username }}</p>
+    {% endfor %}
+    
+    <div id="gameStatus"></div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        let tableId = "{{ table.id }}";
+        let socket;
+
+        socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
+
+        socket.onopen = function(event) {
+            console.log('Подключение установлено');
+            document.getElementById('gameStatus').innerText = 'Вы подключены к игре!';
+        };
+
+        socket.onmessage = function(event) {
+            console.log('Получено сообщение:', event.data);
+            const data = JSON.parse(event.data);
+
+            if (data.players) {
+                updatePlayerList(data.players);
+            }
+        };
+
+        socket.onclose = function(event) {
+            console.log('Подключение закрыто');
+            document.getElementById('gameStatus').innerText = 'Вы покинули игру.';
+        };
+
+        function updatePlayerList(players) {
+            const playersList = document.getElementById('playersList');
+            playersList.innerHTML = '';
+            players.forEach(player => {
+                const playerItem = document.createElement('li');
+                playerItem.textContent = player.username;
+                playersList.appendChild(playerItem);
+            });
+        }
+    </script>
+{% endblock %}

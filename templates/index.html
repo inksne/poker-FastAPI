@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+<title>Приветствуем!</title>
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        h2 {
+            margin-top: 50px;
+            padding: 10px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        h3 {
+            padding: 10px;
+            text-align: center;
+            z-index: 10;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h2>Добро пожаловать!</h2>
+    <h3>Здесь вы можете не только поиграть в техасский холдем, но и найти интересных собеседников.</h3>
+    <h3>Для начала своей первой невероятно увлекательной игры необходимо зарегистрироваться.</h3>
+{% endblock %}

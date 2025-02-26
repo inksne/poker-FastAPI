@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+<title>О нас</title>
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .container {
+            position: relative;
+            background-color: rgba(33, 37, 36, 0);
+            width: 90%;
+            overflow: visible;
+            margin: 0 auto;
+            padding: 10px;
+            margin-top: 60px;
+            outline: rgba(33, 37, 36, 0);
+            border-radius: 8px;
+            color: #f1f1f1;
+        }
+
+        .content-container {
+            background-color: rgba(33, 37, 36, 0);
+            padding: 30px;
+            border-radius: 8px;
+            outline: rgba(33, 37, 36, 0.6);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #88f7ff;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="content-container">
+            <h1>О нас</h1>
+            <h2>Контакты</h2>
+            <p>Если у вас есть вопросы или предложения, не стесняйтесь связаться со мной:</p>
+            <p>Email: <a href="mailto:inksne@gmail.com">inksne@gmail.com</a></p>
+            <p>Код сайта лежит на гитхабе и на гитлабе (если я его не удалил)</p>
+            <p>GitHub: <a href="https://github.com/inksne">https://github.com/inksne</a></p>
+            <p>GitLab: <a href="https://gitlab.com/inksne">https://gitlab.com/inksne</a></p>
+        </div>
+    </div>
+{% endblock %}
