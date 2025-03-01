@@ -53,19 +53,20 @@ def configure_logging(level: int = logging.INFO):
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-        self.players: List[str] = []
+        self.players: List[dict] = []
 
     async def connect(self, websocket: WebSocket, username: str):
         await websocket.accept()
         self.active_connections.append(websocket)
-        self.players.append(username)
+        self.players.append({'username': username, 'websocket': websocket})
 
     def disconnect(self, websocket: WebSocket, username: str):
         self.active_connections.remove(websocket)
-        self.players.remove(username)
+        self.players = [player for player in self.players if player['username'] != username]
 
     async def broadcast(self):
-        message = json.dumps({'players': self.players})
+        players_list = [{'username': player['username']} for player in self.players]
+        message = json.dumps({'players': players_list})
         for connection in self.active_connections:
             await connection.send_text(message)
 
