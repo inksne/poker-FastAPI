@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from auth.validation import get_current_auth_user
 from basemodels import CreateTableRequest
 from config import configure_logging
-from exceptions import bad_blinds, bad_big_blind_uneven, bad_big_blind_small_count, conflict_table, server_exc
+from exceptions import bad_blinds, bad_big_blind_uneven, bad_big_blind_small_count, conflict_table, min_players, server_exc
 
 import logging
 
@@ -63,7 +63,6 @@ async def post_create_table_page(
 async def get_players_count(
     table_id: int,
     current_user: User = Depends(get_current_auth_user),
-    session: AsyncSession = Depends(get_async_session)
 ):
     players = redis_manager.get_players(table_id)
 
