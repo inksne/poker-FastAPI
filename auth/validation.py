@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 import logging
 
 from auth.helpers import TOKEN_TYPE_FIELD, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
-from auth.utils import decode_jwt, decode_jwt_ws, validate_password
+from auth.utils import decode_jwt, validate_password
 from auth.schemas import UserSchema
 from database.models import User
 from database.database import get_async_session
@@ -21,7 +21,7 @@ from exceptions import (
     unauthed_exc,
     bad_email_exc,
     ws_unauthorized_none_access,
-    server_exc
+    ws_server_exc
 )
 
 
@@ -125,11 +125,11 @@ async def ws_verify_user(access_token: str = Cookie(None)):
         raise ws_unauthorized_none_access
     
     try:
-        payload = decode_jwt_ws(access_token)
+        payload = decode_jwt(access_token)
         username = payload.get("sub")
         if not username:
             raise bad_token_exc
         return username
     except Exception as e:
         logger.error(e)
-        raise server_exc
+        raise ws_server_exc
