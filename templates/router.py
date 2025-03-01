@@ -104,6 +104,8 @@ async def game_page(
     players = [{'username': player.decode() if isinstance(player, bytes) else player} for player in players]
 
     logger.warning(players)
+
+    is_creator = table.creator.username == current_user.username
     
     return templates.TemplateResponse(
         request,
@@ -111,6 +113,7 @@ async def game_page(
         {
             'table': table,
             'players': players,
-            'current_user': current_user
+            'current_user': current_user,
+            'is_creator': is_creator
         }
     )

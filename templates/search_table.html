@@ -109,12 +109,12 @@
             fetch(`/api/v1/authenticated/get_players/${tableId}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(`Количество игроков для стола ${tableId}:`, data.player_count);
+                    console.log(`количество игроков для стола ${tableId}:`, data.player_count);
                     if (playerCountElement) {
                         playerCountElement.textContent = data.player_count;
                     }
                 })
-                .catch(error => console.error("Ошибка при обновлении количества игроков:", error));
+                .catch(error => console.error("ошибка при обновлении количества игроков:", error));
         }
 
         function startPlayerCountUpdates() {
@@ -138,21 +138,21 @@
             const socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
 
             socket.onopen = function() {
-                console.log("Подключение к игре установлено");
+                console.log("подключение к игре установлено");
                 window.location.href = `/authenticated/game/${tableId}`;
             };
 
             socket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                console.log("Получено сообщение от сервера:", data);
+                console.log("получено сообщение от сервера:", data);
             };
 
             socket.onerror = function(error) {
-                console.log("Ошибка WebSocket:", error);
+                console.log("ошибка ws:", error);
             };
 
             socket.onclose = function(event) {
-                console.log("Соединение с сервером закрыто", event);
+                console.log("соединение с сервером закрыто", event);
             };
         }
     </script>

@@ -8,21 +8,84 @@
             padding: 0;
             margin: 0;
         }
-        
+
         #playersList p {
             margin: 5px 0;
+        }
+
+        .poker-table {
+            width: 85%;
+            height: 370px;
+            border-radius: 70px;
+            background-color: #0e2e41;
+            border: 20px solid #251a1a;
+            position: relative;
+            margin-top: 50px;
+            margin-left: 7.5%;
+            z-index: 10;
+        }
+
+        .player-slot {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            border-radius: 30px;
+            background-color: #fff;
+            border: 3px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .player1 { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .player2 { top: 20px; left: 50%; transform: translateX(-50%); }
+        .player3 { top: 14%; left: 15px; transform: translateY(-50%); }
+        .player4 { top: 14%; right: 15px; transform: translateY(-50%); }
+        .player5 { bottom: 50px; left: 15px; transform: translateY(50%); }
+        .player6 { bottom: 50px; right: 15px; transform: translateY(50%); }
+
+        #gameStatus {
+            margin-top: 20px;
+        }
+
+        .start-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #069731;
+            color: white;
+            border: 3px solid #069731;
+            border-radius: 30px;
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
         }
     </style>
 {% endblock %}
 
 {% block content %}
-    <h2>Игра за столом: {{ table.name }}</h2>
-    <p>Игроки за столом:</p>
-    {% for player in players %}
-        <p style="text-align: center;">{{ player.username }}</p>
-    {% endfor %}
-    
+    <h2 style="text-align: center;">Игра за столом: {{ table.name }}</h2>
+    <div class="poker-table" id="pokerTable">
+        <div class="player-slot player1" id="slot1">Пусто</div>
+        <div class="player-slot player2" id="slot2">Пусто</div>
+        <div class="player-slot player3" id="slot3">Пусто</div>
+        <div class="player-slot player4" id="slot4">Пусто</div>
+        <div class="player-slot player5" id="slot5">Пусто</div>
+        <div class="player-slot player6" id="slot6">Пусто</div>
+        
+        <button id="startGameButton" class="start-button">Начать игру</button>
+    </div>
+
     <div id="gameStatus"></div>
+    <div id="errorMessage" style="color: red; text-align: center; margin-top: 20px; display: none;"></div>
 {% endblock %}
 
 {% block scripts %}
@@ -30,36 +93,84 @@
     <script>
         let tableId = "{{ table.id }}";
         let socket;
+        let players = [];
+        let isCreator = JSON.parse('{{ is_creator | tojson }}');
 
         socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
 
         socket.onopen = function(event) {
-            console.log('Подключение установлено');
+            console.log('подключение установлено');
             document.getElementById('gameStatus').innerText = 'Вы подключены к игре!';
+
+            if (isCreator) {
+                document.getElementById('startGameButton').style.display = 'inline-block';
+            } else {
+                document.getElementById('startGameButton').style.display = 'none';
+            }
         };
 
         socket.onmessage = function(event) {
-            console.log('Получено сообщение:', event.data);
+            console.log('получено сообщение:', event.data);
             const data = JSON.parse(event.data);
 
             if (data.players) {
-                updatePlayerList(data.players);
+                players = data.players;
+                updatePlayerList(players);
+            }
+
+            if (data.game_started) {
+                alert('Игра началась!');
+                document.getElementById('startGameButton').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
+            if (data.error) {
+                document.getElementById('errorMessage').innerText = data.error;
+                document.getElementById('errorMessage').style.display = 'block';
             }
         };
 
         socket.onclose = function(event) {
-            console.log('Подключение закрыто');
+            console.log('подключение закрыто');
             document.getElementById('gameStatus').innerText = 'Вы покинули игру.';
         };
 
         function updatePlayerList(players) {
-            const playersList = document.getElementById('playersList');
-            playersList.innerHTML = '';
-            players.forEach(player => {
-                const playerItem = document.createElement('li');
-                playerItem.textContent = player.username;
-                playersList.appendChild(playerItem);
+            const playerSlots = [
+                document.getElementById('slot1'),
+                document.getElementById('slot2'),
+                document.getElementById('slot3'),
+                document.getElementById('slot4'),
+                document.getElementById('slot5'),
+                document.getElementById('slot6')
+            ];
+
+            playerSlots.forEach(slot => slot.innerText = 'Пусто');
+
+            const firstPlayerIndex = players.findIndex(player => player.username === '{{ current_user.username }}');
+
+            players.forEach((player, index) => {
+                const slot = playerSlots[index];
+                if (slot) {
+                    slot.innerText = player.username;
+                    const positionIndex = (firstPlayerIndex + index) % players.length;
+                    slot.classList = `player-slot player${positionIndex + 1}`;
+                }
             });
         }
+
+        document.getElementById('startGameButton').addEventListener('click', function() {
+            if (players.length < 2) {
+                document.getElementById('errorMessage').innerText = "Недостаточно игроков для начала игры.";
+                document.getElementById('errorMessage').style.display = 'block';
+                return;
+            }
+
+            const message = JSON.stringify({ action: 'start_game' });
+            socket.send(message);
+
+            document.getElementById('startGameButton').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        });
     </script>
 {% endblock %}

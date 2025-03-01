@@ -140,11 +140,11 @@
                     window.location.href = result.redirect_url;
                 } else {
                     const result = await response.json();
-                    document.getElementById('error-message').textContent = result.detail || 'Ошибка при создании стола';
+                    document.getElementById('error-message').textContent = result.detail || 'ошибка при создании стола';
                     document.getElementById('error-message').style.display = 'block';
                 }
             } catch (error) {
-                document.getElementById('error-message').textContent = 'Ошибка при подключении к серверу';
+                document.getElementById('error-message').textContent = 'ошибка при подключении к серверу';
                 document.getElementById('error-message').style.display = 'block';
             }
         });
