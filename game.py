@@ -13,6 +13,7 @@ from database.models import Table
 
 from config import configure_logging, ws_manager
 from auth.validation import ws_verify_user
+from exceptions import ws_not_found_table, ws_max_players, ws_server_exc
 
 
 router = APIRouter(tags=['Game'])
@@ -42,15 +43,20 @@ async def ws_game_page(
         table = result_table.scalars().first()
 
         if not table:
-            await websocket.close(code=status.WS_1000_NORMAL_CLOSURE)
-            logger.error('стол не найден')
-            return
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            raise ws_not_found_table
 
         players = redis_manager.get_players(table_id)
 
         players = [{'username': player.decode() if isinstance(player, bytes) else player} for player in players]
 
+        if len(players) > 10:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            raise ws_max_players
+
         logger.warning(players)
+
+        await ws_manager.broadcast()
 
         await websocket.send_text(json.dumps({
             'players': players
@@ -58,7 +64,11 @@ async def ws_game_page(
 
         while True:
             data = await websocket.receive_text()
-            logger.info(f"получено сообщение от {username}: {data}")
+
+            data = json.loads(data)
+
+            if data.get('action') == 'start_game':
+                logger.info(f"игра начинается за столом {table_id}")
 
     except WebSocketDisconnect as e:
         logger.error(e)
@@ -73,3 +83,7 @@ async def ws_game_page(
     except RuntimeError as e:
         logger.info('RuntimeError')
         logger.error(e)
+
+    except Exception as e:
+        logger.error(e)
+        raise ws_server_exc
