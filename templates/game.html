@@ -95,33 +95,40 @@
         let socket;
         let players = [];
         let isCreator = JSON.parse('{{ is_creator | tojson }}');
-
+        let playerCards = {};
+    
         socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
-
+    
         socket.onopen = function(event) {
             console.log('подключение установлено');
             document.getElementById('gameStatus').innerText = 'Вы подключены к игре!';
-
+    
             if (isCreator) {
                 document.getElementById('startGameButton').style.display = 'inline-block';
             } else {
                 document.getElementById('startGameButton').style.display = 'none';
             }
         };
-
+    
         socket.onmessage = function(event) {
             console.log('получено сообщение:', event.data);
             const data = JSON.parse(event.data);
-
+    
             if (data.players) {
                 players = data.players;
                 updatePlayerList(players);
             }
-
+    
             if (data.game_started) {
                 alert('Игра началась!');
                 document.getElementById('startGameButton').style.display = 'none';
                 document.getElementById('errorMessage').style.display = 'none';
+            }
+    
+            if (data.cards) {
+                playerCards = data.cards;
+                console.log('Полученные карты:', playerCards);
+                displayCards(playerCards);
             }
 
             if (data.error) {
@@ -129,12 +136,12 @@
                 document.getElementById('errorMessage').style.display = 'block';
             }
         };
-
+    
         socket.onclose = function(event) {
             console.log('подключение закрыто');
             document.getElementById('gameStatus').innerText = 'Вы покинули игру.';
         };
-
+    
         function updatePlayerList(players) {
             const playerSlots = [
                 document.getElementById('slot1'),
@@ -144,11 +151,11 @@
                 document.getElementById('slot5'),
                 document.getElementById('slot6')
             ];
-
+    
             playerSlots.forEach(slot => slot.innerText = 'Пусто');
-
+    
             const firstPlayerIndex = players.findIndex(player => player.username === '{{ current_user.username }}');
-
+    
             players.forEach((player, index) => {
                 const slot = playerSlots[index];
                 if (slot) {
@@ -158,17 +165,31 @@
                 }
             });
         }
-
+    
+        function displayCards(cards) {
+            players.forEach(player => {
+                const playerCardText = cards[player.username] ? cards[player.username].join(', ') : 'Нет карт';
+                const playerSlot = document.querySelector(`#slot${players.findIndex(p => p.username === player.username) + 1}`);
+                if (playerSlot) {
+                    if (player.username === '{{ current_user.username }}') {
+                        playerSlot.innerText = `${player.username}: ${playerCardText}`;
+                    } else {
+                        playerSlot.innerText = `${player.username}: Карты скрыты`;
+                    }
+                }
+            });
+        }
+    
         document.getElementById('startGameButton').addEventListener('click', function() {
             if (players.length < 2) {
                 document.getElementById('errorMessage').innerText = "Недостаточно игроков для начала игры.";
                 document.getElementById('errorMessage').style.display = 'block';
                 return;
             }
-
+    
             const message = JSON.stringify({ action: 'start_game' });
             socket.send(message);
-
+    
             document.getElementById('startGameButton').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
         });
