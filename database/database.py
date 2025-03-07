@@ -1,4 +1,5 @@
 from typing import AsyncGenerator
+import json
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -29,6 +30,7 @@ class RedisManager:
     def __init__(self):
         self.r = Redis(host='localhost', port=6379, db=0)
 
+
     def add_player(self, table_id: int, username: str):
         self.r.sadd(table_id, username)
 
@@ -38,6 +40,18 @@ class RedisManager:
     
     def remove_player(self, table_id: int, username: str):
         self.r.srem(table_id, username)
-        
+
+
+    def add_player_cards(self, username: str, cards: list):
+        for card in cards:
+            self.r.sadd(username, card)
+
+    def get_player_cards(self, username: str):
+        cards = self.r.smembers(username)
+        return cards
+    
+    def remove_player_cards(self, username: str):
+        self.r.delete(username)
+
 
 redis_manager = RedisManager()
