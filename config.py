@@ -39,6 +39,7 @@ class DBSettings(BaseSettings):
     db_url: str = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}'
     db_echo: bool = False
 
+
 db_settings = DBSettings()
 
 
@@ -48,6 +49,10 @@ def configure_logging(level: int = logging.INFO):
         datefmt="%Y-%m-%d %H:%M:%S",
         format="[%(asctime)s.%(msecs)03d] %(funcName)20s %(module)s:%(lineno)d %(levelname)-8s - %(message)s"
     )
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -62,13 +67,15 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket, username: str):
         self.active_connections.remove(websocket)
-        self.players = [player for player in self.players if player['username'] != username]
+        for player in self.players:
+            if player['username'] == username and player['websocket'] == websocket:
+                self.players.remove(player)
+                break
 
     async def broadcast(self):
         players_list = [{'username': player['username']} for player in self.players]
-        message = json.dumps({'players': players_list})
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_text(json.dumps({'players': players_list}))
 
 
 ws_manager = ConnectionManager()
