@@ -2,22 +2,17 @@ from fastapi import APIRouter, Depends
 
 from auth.validation import get_current_auth_user
 from basemodels import CreateTableRequest
-from config import configure_logging
-from exceptions import bad_blinds, bad_big_blind_uneven, bad_big_blind_small_count, conflict_table, min_players, server_exc
-
-import logging
+from config import logger
+from exceptions import bad_blinds, bad_big_blind_uneven, bad_big_blind_small_count, conflict_table, server_exc
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from database.database import get_async_session, redis_manager
+from database.database import get_async_session
+from database.managers import redis_manager
 from database.models import User, Table
 
 
 router = APIRouter(tags=['API'])
-
-
-configure_logging()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/api/v1/authenticated/create_table")
