@@ -72,10 +72,14 @@ class ConnectionManager:
                 self.players.remove(player)
                 break
 
-    async def broadcast(self):
+    async def broadcast_players_list(self):
         players_list = [{'username': player['username']} for player in self.players]
         for connection in self.active_connections:
             await connection.send_text(json.dumps({'players': players_list}))
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            await connection.send_text(json.dumps(message))
 
 
 ws_manager = ConnectionManager()
