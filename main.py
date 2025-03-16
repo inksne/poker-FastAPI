@@ -6,7 +6,7 @@ from database.database import create_db_and_tables
 
 from auth.auth import router as auth_router
 from templates.router import router as template_router
-from game import router as game_router
+from game.game import router as game_router
 from api import router as api_router
 
 
