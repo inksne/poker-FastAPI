@@ -71,28 +71,18 @@ class RedisManager:
     
     def remove_pot(self, table_id: int) -> None:
         self.r.delete(f'{table_id}:pot')
+        
 
-
-    def add_sb_index(self, table_id: int, sb_index: int) -> None:
+    def add_indexes(self, table_id: int, sb_index: int, bb_index: int, d_index: int) -> None:
         self.r.set(f'{table_id}:sb_index', sb_index)
-
-    def add_bb_index(self, table_id: int, bb_index: int) -> None:
         self.r.set(f'{table_id}:bb_index', bb_index)
-
-    def add_d_index(self, table_id: int, d_index: int) -> None:
         self.r.set(f'{table_id}:d_index', d_index)
-
-    def get_sb_index(self, table_id: int) -> int:
+    
+    def get_indexes(self, table_id: int) -> int:
         sb_index = self.r.get(f'{table_id}:sb_index')
-        return int(sb_index.decode() if isinstance(sb_index, bytes) else sb_index)
-    
-    def get_bb_index(self, table_id: int) -> int:
         bb_index = self.r.get(f'{table_id}:bb_index')
-        return int(bb_index.decode() if isinstance(bb_index, bytes) else bb_index)
-    
-    def get_d_index(self, table_id: int) -> int:
         d_index = self.r.get(f'{table_id}:d_index')
-        return int(d_index.decode() if isinstance(d_index, bytes) else d_index)
+        return int(sb_index.decode() if isinstance(sb_index, bytes) else sb_index), int(bb_index.decode() if isinstance(bb_index, bytes) else bb_index), int(d_index.decode() if isinstance(d_index, bytes) else d_index)
     
     def remove_indexes(self, table_id: int) -> None:
         self.r.delete(f'{table_id}:sb_index')
@@ -111,15 +101,29 @@ class RedisManager:
         self.r.delete(f'{table_id}:current_turn')
 
 
-    def add_player_to_stage(self, table_id: int, stage: int, username: str) -> None:
-        self.r.sadd(f'{table_id}:stage:{stage}:players', username)
+    def set_player_done_move(self, table_id: int, username: str, done: bool) -> None:
+        self.r.set(f'{table_id}:player_done_move:{username}', str(done))
 
-    def get_players_who_played_on_stage(self, table_id: int, stage: int) -> set:
-        players_who_played = self.r.smembers(f'{table_id}:stage:{stage}:players')
-        return {player.decode() if isinstance(player, bytes) else player for player in players_who_played}
+    def get_player_done_move(self, table_id: int, username: str) -> bool:
+        done = self.r.get(f'{table_id}:player_done_move:{username}')
+        normal_done = str(done.decode() if isinstance(done, bytes) else done)
+        return True if normal_done == 'True' else False if done else False
+    
+    def remove_player_done_move(self, table_id: int, username: str) -> None:
+        self.r.delete(f'{table_id}:player_done_move:{username}')
 
-    def remove_players_for_stage(self, table_id: int, stage: int) -> None:
-        self.r.delete(f'{table_id}:stage:{stage}:players')
+
+    def set_player_folded(self, table_id: int, username: str, folded: bool) -> None:
+        self.r.set(f'{table_id}:player_folded:{username}', str(folded))
+
+    def get_player_folded(self, table_id: int, username: str) -> bool:
+        folded = self.r.get(f'{table_id}:player_folded:{username}')
+        normal_folded = str(folded.decode() if isinstance(folded, bytes) else folded)
+        return True if normal_folded == 'True' else False if folded else False
+    
+    def remove_player_folded(self, table_id: int, username: str) -> None:
+        self.r.delete(f'{table_id}:player_folded:{username}')
+
 
 redis_manager = RedisManager()
 
