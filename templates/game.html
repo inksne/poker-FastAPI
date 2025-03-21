@@ -83,8 +83,103 @@
             text-align: center;
             position: absolute;
             top: 104%;
-            left: 48%;
+            left: 40%;
             transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .fold-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #e74c3c;
+            color: white;
+            border: 3px solid #e74c3c;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            text-align: center;
+            position: absolute;
+            top: 104%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .raise-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #3498db;
+            color: white;
+            border: 3px solid #3498db;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            text-align: center;
+            position: absolute;
+            top: 104%;
+            left: 60%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        #raiseModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 20;
+        }
+
+        #raiseModal input {
+            padding: 10px;
+            width: 150px;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #raiseModal button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #raiseModal button.cancel {
+            background-color: #e74c3c;
+            margin-left: 10px;
+        }
+
+        #raiseAmountInput {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px;
+            font-size: 14px;
+            width: 100px;
+            text-align: center;
+            position: absolute;
+            top: 110%;
+            left: 75%;
+            transform: translateX(-50%);
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
 
@@ -123,7 +218,6 @@
         #bettingOptions {
             text-align: center;
             margin-top: 20px;
-            display: none;
         }
 
         .bet-button {
@@ -133,12 +227,6 @@
             color: white;
             border-radius: 10px;
             cursor: pointer;
-        }
-
-        #raiseAmountInput {
-            display: inline-block;
-            margin: 5px;
-            padding: 5px;
         }
     </style>
 {% endblock %}
@@ -182,6 +270,11 @@
 
         <button id="startGameButton" class="start-button">Начать игру</button>
         <button id="callButton" class="call-button" style="display: none;">Call</button>
+        <button id="foldButton" class="fold-button" style="display: none;">Fold</button>
+        <div id="bettingOptions" style="text-align: center; margin-top: 20px; display: none;">
+            <input type="number" id="raiseAmountInput" placeholder="Сумма рейза" style="top: 104%; left: 70%"/>
+            <button id="raiseButton" class="raise-button">Raise</button>
+        </div>
     </div>
 
     <div id="gameStatus"></div>
@@ -228,6 +321,8 @@
                 alert('Игра началась!');
                 document.getElementById('startGameButton').style.display = 'none';
                 document.getElementById('callButton').style.display = 'inline-block';
+                document.getElementById('foldButton').style.display = 'inline-block';
+                document.getElementById('bettingOptions').style.display = 'inline-block';
                 document.getElementById('errorMessage').style.display = 'none';
             }
 
@@ -296,6 +391,9 @@
                     slot.innerHTML = `${player.username}<div class="player-balance" id="balance-${index + 1}"></div><div class="player-cards" id="cards-${index + 1}"></div>`;
                     const positionIndex = (firstPlayerIndex + index) % players.length;
                     slot.classList = `player-slot player${positionIndex + 1}`;
+                    if (player.folded) {
+                        slot.style.opacity = '0.5';
+                    }
                 }
             });
         }
@@ -372,6 +470,23 @@
 
         document.getElementById('callButton').addEventListener('click', function() {
             socket.send(JSON.stringify({ action: 'call', tableId: tableId }));
+        });
+
+        document.getElementById('foldButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ action: 'fold', tableId: tableId }));
+        });
+
+        document.getElementById('raiseButton').addEventListener('click', function() {
+            const raiseAmount = document.getElementById('raiseAmountInput').value;
+            if (raiseAmount && raiseAmount > 0) {
+                socket.send(JSON.stringify({
+                    action: 'raise',
+                    tableId: tableId,
+                    amount: parseInt(raiseAmount)
+                }));
+            } else {
+                alert("Введите корректную сумму для рейза.");
+            }
         });
     </script>
 {% endblock %}
