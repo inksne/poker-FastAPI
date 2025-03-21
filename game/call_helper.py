@@ -31,20 +31,32 @@ async def process_call_bet(
         player_balance = int(player_balance)
         logger.info(f'{table.id} баланс найден: {player_balance}')
 
-    if current_turn == small_blind_index:
-        if player_balance < small_blind:
-            await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
-            return
-        redis_manager.update_player_balance(username, player_balance, -small_blind)
-        redis_manager.update_pot(table.id, small_blind)
+    raise_amount = redis_manager.get_raise_amount(table.id)
 
-    elif current_turn == big_blind_index:
-        await websocket.send_text(json.dumps({"info": "Сделан check."}))
+    if not raise_amount:
 
+        if current_turn == small_blind_index:
+            if player_balance < small_blind:
+                await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
+                return
+            redis_manager.update_player_balance(username, player_balance, -small_blind)
+            redis_manager.update_pot(table.id, small_blind)
+
+        elif current_turn == big_blind_index:
+            await websocket.send_text(json.dumps({"info": "Сделан check."}))
+
+        else:
+            if player_balance < big_blind:
+                await websocket.send_text(json.dumps({"error": "Недостаточно средств для call."}))
+                return
+            
     else:
-        if player_balance < big_blind:
-            await websocket.send_text(json.dumps({"error": "Недостаточно средств для call."}))
+        if player_balance < raise_amount:
+            await websocket.send_text(json.dumps({"error": f"Недостаточно средств для call на {raise_amount}."}))
             return
+
+        redis_manager.update_player_balance(username, player_balance, -raise_amount)
+        redis_manager.update_pot(table.id, raise_amount)
 
     redis_manager.set_player_done_move(table.id, username, True)
 
@@ -55,6 +67,7 @@ async def process_call_bet(
     if all_done:
         await proceed_to_next_stage()
         await send_game_stage_global()
+        redis_manager.remove_raise_amount(table.id)
         redis_manager.set_player_done_move(table.id, username, False)
 
     balance_data = {}

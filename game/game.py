@@ -160,6 +160,7 @@ async def ws_game_page(
             redis_manager.remove_current_turn(table_id)
             redis_manager.remove_indexes(table_id)
             redis_manager.remove_pot(table_id)
+            redis_manager.remove_raise_amount(table_id)
 
             players = redis_manager.get_players(table_id)
             for player in players:
