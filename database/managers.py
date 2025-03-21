@@ -71,7 +71,7 @@ class RedisManager:
     
     def remove_pot(self, table_id: int) -> None:
         self.r.delete(f'{table_id}:pot')
-        
+
 
     def add_indexes(self, table_id: int, sb_index: int, bb_index: int, d_index: int) -> None:
         self.r.set(f'{table_id}:sb_index', sb_index)
@@ -123,6 +123,17 @@ class RedisManager:
     
     def remove_player_folded(self, table_id: int, username: str) -> None:
         self.r.delete(f'{table_id}:player_folded:{username}')
+
+
+    def add_raise_amount(self, table_id: int, amount: int) -> None:
+        self.r.set(f'{table_id}:raise_amount', amount)
+
+    def get_raise_amount(self, table_id: int) -> int | None:
+        raise_amount = self.r.get(f'{table_id}:raise_amount')
+        return int(raise_amount.decode()) if isinstance(raise_amount, bytes) else raise_amount
+    
+    def remove_raise_amount(self, table_id: int) -> None:
+        self.r.delete(f'{table_id}:raise_amount')
 
 
 redis_manager = RedisManager()
