@@ -20,7 +20,7 @@ async def post_create_table_page(
     table_data: CreateTableRequest,
     current_user: User = Depends(get_current_auth_user),
     session: AsyncSession = Depends(get_async_session)
-):
+) -> dict:
     if table_data.big_blind <= 1 or table_data.start_money <= 9:
         raise bad_blinds
         
@@ -58,7 +58,7 @@ async def post_create_table_page(
 async def get_players_count(
     table_id: int,
     current_user: User = Depends(get_current_auth_user),
-):
+) -> dict:
     players = redis_manager.get_players(table_id)
 
     return {"player_count": len(players)}
