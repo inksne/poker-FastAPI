@@ -39,6 +39,10 @@ async def process_raise_bet(
     redis_manager.update_player_balance(username, player_balance, -raise_amount)
     redis_manager.update_pot(table.id, raise_amount)
 
+    logger.info(f'raise_amount: {raise_amount}')
+
+    redis_manager.add_raise_amount(table.id, raise_amount)
+
     redis_manager.set_player_done_move(table.id, username, True)
 
     all_done = await check_all_players_done(players, table.id)
@@ -46,9 +50,9 @@ async def process_raise_bet(
     logger.info(f'all done: {all_done}')
 
     if all_done:
-        await proceed_to_next_stage()
-        await send_game_stage_global()
-        redis_manager.set_player_done_move(table.id, username, False)
+        next_turn = get_next_turn(players, table.id, current_turn)
+        logger.info(f'следующий ход за {players[next_turn]["username"]}')
+        redis_manager.add_current_turn(table.id, next_turn)
 
     balance_data = {}
     for player in players:
