@@ -34,7 +34,6 @@ async def process_call_bet(
     raise_amount = redis_manager.get_raise_amount(table.id)
 
     if not raise_amount:
-
         if current_turn == small_blind_index:
             if player_balance < small_blind:
                 await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
