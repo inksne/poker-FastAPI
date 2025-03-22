@@ -124,52 +124,21 @@
             z-index: 10;
         }
 
-        #raiseModal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 20;
-        }
-
-        #raiseModal input {
-            padding: 10px;
-            width: 150px;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        #raiseModal button {
-            padding: 10px 20px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #raiseModal button.cancel {
-            background-color: #e74c3c;
-            margin-left: 10px;
-        }
-
         #raiseAmountInput {
             display: inline-block;
             margin: 5px;
-            padding: 5px;
+            padding: 10px;
             font-size: 14px;
             width: 100px;
             text-align: center;
             position: absolute;
-            top: 110%;
-            left: 75%;
+            top: 104%;
+            left: 65%;
             transform: translateX(-50%);
+            background-color: transparent;
+            border: 1px solid #ccc;
+            color: #ccc;
+            border-radius: 5px;
         }
 
         #overlay {
@@ -228,6 +197,30 @@
             border-radius: 10px;
             cursor: pointer;
         }
+
+        .community-cards {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .community-card {
+            width: 40px;
+            height: 60px;
+            background-color: #fff;
+            border-radius: 5px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 {% endblock %}
 
@@ -268,6 +261,10 @@
             <div class="player-cards" id="cards-6"></div>
         </div>
 
+        <div class="community-cards" id="communityCards">
+            <!-- Общие карты флопа, терна и ривера будут отображаться здесь -->
+        </div>
+
         <button id="startGameButton" class="start-button">Начать игру</button>
         <button id="callButton" class="call-button" style="display: none;">Call</button>
         <button id="foldButton" class="fold-button" style="display: none;">Fold</button>
@@ -294,6 +291,12 @@
         let playerCards = {};
         let currentTurn = null;
         let pot = 0;
+        let gameStage;
+        let communityCards = {
+            flop: [],
+            turn: [],
+            river: []
+        };
 
         socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
 
@@ -318,7 +321,6 @@
             }
 
             if (data.game_started) {
-                alert('Игра началась!');
                 document.getElementById('startGameButton').style.display = 'none';
                 document.getElementById('callButton').style.display = 'inline-block';
                 document.getElementById('foldButton').style.display = 'inline-block';
@@ -332,8 +334,27 @@
                 displayCards(playerCards);
             }
 
+            if (data.community_cards) {
+                console.log('все карты:', data.community_cards)
+            }
+
             if (data.game_stage) {
                 document.getElementById('gameStage').innerText = `Текущая стадия: ${data.game_stage}`;
+
+                if (data.community_cards) {
+                    console.log('все карты:', data.community_cards);
+                    console.log('gameStage:', data.game_stage);
+                    if (data.game_stage === "Flop") {
+                        communityCards.flop = data.community_cards.flop;
+                        updateCommunityCards(communityCards.flop);
+                    } else if (data.game_stage === "Turn") {
+                        communityCards.turn = data.community_cards.turn;
+                        updateCommunityCards(communityCards.flop.concat(communityCards.turn));
+                    } else if (data.game_stage === "River") {
+                        communityCards.river = data.community_cards.river;
+                        updateCommunityCards(communityCards.flop.concat(communityCards.turn, communityCards.river));
+                    }
+                }
             }
 
             if (data.blinds_and_dealer) {
@@ -410,6 +431,19 @@
                         cardsDiv.innerText = `Карты скрыты`;
                     }
                 }
+            });
+        }
+
+        function updateCommunityCards(cards) {
+            const communityCardsContainer = document.getElementById('communityCards');
+            
+            communityCardsContainer.innerHTML = '';
+
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'community-card';
+                cardElement.innerText = card;
+                communityCardsContainer.appendChild(cardElement);
             });
         }
 
