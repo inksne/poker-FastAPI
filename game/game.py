@@ -13,7 +13,7 @@ from auth.validation import ws_verify_user
 from exceptions import ws_not_found_table, ws_max_players, ws_server_exc
 
 from .card_helpers import check_player_cards_periodically, deal_cards
-from .stage_and_turn_helpers import send_game_stage, send_current_turn_and_pot, check_player_right_turn
+from .stage_and_turn_helpers import send_game_stage_cards_and_game_started, send_current_turn_and_pot, check_player_right_turn
 from .blinds_helpers import get_blinds_and_dealer, send_blinds_and_dealer, process_blind_bets
 from .call_helper import process_call_bet
 from .fold_helper import process_fold
@@ -64,7 +64,7 @@ async def ws_game_page(
                 logger.info(f"игра начинается за столом {table_id}")
 
                 players_list = redis_manager.get_players(table_id)
-                player_cards = deal_cards(players_list)
+                player_cards, community_cards = deal_cards(players_list)
                 logger.info(player_cards)
 
                 cards_for_players = {}
@@ -72,12 +72,14 @@ async def ws_game_page(
                     cards_for_players[player['username']] = player_cards.get(player['username'], [])
                     redis_manager.add_player_cards(player['username'], player_cards.get(player['username'], []))
 
+                redis_manager.add_community_cards(table_id, community_cards)
+
                 logger.warning(f'игроки после: {players_list}')
                 logger.warning(f'карты: {player_cards}')
 
-                await websocket.send_text(json.dumps({'game_started': True, 'cards': cards_for_players}))
+                await websocket.send_text(json.dumps({'cards': cards_for_players}))
 
-                await send_game_stage(websocket)
+                await send_game_stage_cards_and_game_started(community_cards)
 
                 dealer_index, small_blind_index, big_blind_index = get_blinds_and_dealer(players_list)
 
@@ -96,17 +98,13 @@ async def ws_game_page(
                 logger.info(f'{username} делает call')
 
                 players = redis_manager.get_players(table_id)
-                current_turn = redis_manager.get_current_turn(table_id)
+                community_cards = redis_manager.get_community_cards(table_id)
 
                 small_blind_index, big_blind_index, dealer_index = redis_manager.get_indexes(table_id)
 
-                await process_call_bet(websocket, players, small_blind_index, big_blind_index, table)
+                await process_call_bet(websocket, players, small_blind_index, big_blind_index, community_cards, table)
 
                 await send_current_turn_and_pot(players, small_blind_index, table_id)
-
-                await ws_manager.broadcast({
-                    "current_turn": players[current_turn]['username']
-                })
 
             if data.get('action') == 'fold':
                 if not await check_player_right_turn(websocket, table_id, username):
@@ -115,13 +113,9 @@ async def ws_game_page(
                 logger.info(f'{username} делает fold')
 
                 players = redis_manager.get_players(table_id)
-                current_turn = redis_manager.get_current_turn(table_id)
+                community_cards = redis_manager.get_community_cards(table_id)
 
-                await process_fold(players, table_id)
-
-                await ws_manager.broadcast({
-                    "current_turn": players[current_turn]['username']
-                })
+                await process_fold(players, table_id, community_cards)
 
             if data.get('action') == 'raise':
                 if not await check_player_right_turn(websocket, table_id, username):
@@ -135,17 +129,12 @@ async def ws_game_page(
                 logger.info(f'{username} делает raise на сумму {raise_amount}')
 
                 players = redis_manager.get_players(table_id)
-                current_turn = redis_manager.get_current_turn(table_id)
 
                 small_blind_index, big_blind_index, dealer_index = redis_manager.get_indexes(table_id)
 
                 await process_raise_bet(websocket, players, small_blind_index, big_blind_index, table, raise_amount)
 
                 await send_current_turn_and_pot(players, small_blind_index, table_id)
-
-                await ws_manager.broadcast({
-                    "current_turn": players[current_turn]['username']
-                })
 
 
     except WebSocketDisconnect as e:
@@ -161,6 +150,7 @@ async def ws_game_page(
             redis_manager.remove_indexes(table_id)
             redis_manager.remove_pot(table_id)
             redis_manager.remove_raise_amount(table_id)
+            redis_manager.remove_community_cards(table_id)
 
             players = redis_manager.get_players(table_id)
             for player in players:
