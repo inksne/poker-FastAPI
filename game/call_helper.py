@@ -6,7 +6,7 @@ from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, logger
 
-from .stage_and_turn_helpers import check_all_players_done, proceed_to_next_stage, send_game_stage_global, get_next_turn
+from .stage_and_turn_helpers import check_all_players_done, proceed_to_next_stage, send_game_stage_cards_and_game_started, get_next_turn
 
 
 async def process_call_bet(
@@ -14,6 +14,7 @@ async def process_call_bet(
     players: list[dict],
     small_blind_index: int,
     big_blind_index: int,
+    community_cards: dict,
     table: Table
 ) -> None:
     small_blind = table.small_blind
@@ -65,7 +66,7 @@ async def process_call_bet(
 
     if all_done:
         await proceed_to_next_stage()
-        await send_game_stage_global()
+        await send_game_stage_cards_and_game_started(community_cards)
         redis_manager.remove_raise_amount(table.id)
         redis_manager.set_player_done_move(table.id, username, False)
 
