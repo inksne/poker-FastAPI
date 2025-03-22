@@ -7,7 +7,7 @@ import asyncio
 from poker import Card
 from config import logger
 from database.managers import redis_manager
-from .stage_and_turn_helpers import send_game_stage
+from .stage_and_turn_helpers import send_game_stage_global
 
 
 def create_deck() -> list:
@@ -19,10 +19,16 @@ def create_deck() -> list:
 def deal_cards(players: list[dict]) -> dict:
     deck = create_deck()
     player_cards = {}
+    community_cards = {'flop': [], 'turn': [], 'river': []}
+    
     for i, player in enumerate(players):
         player_cards[player['username']] = [deck.pop(), deck.pop()]
 
-    return player_cards
+    community_cards['flop'] = [deck.pop(), deck.pop(), deck.pop()]
+    community_cards['turn'] = [deck.pop()]
+    community_cards['river'] = [deck.pop()]
+
+    return player_cards, community_cards
 
 
 async def check_player_cards_periodically(websocket: WebSocket, username: str) -> None:
@@ -35,7 +41,7 @@ async def check_player_cards_periodically(websocket: WebSocket, username: str) -
                     cards_for_players = {}
                     cards_for_players[username] = player_cards
                     await websocket.send_text(json.dumps({'game_started': True, 'cards': cards_for_players}))
-                    await send_game_stage(websocket)
+                    await send_game_stage_global()
                     break
                 else:
                     logger.info(f'карты не найдены для {username}')

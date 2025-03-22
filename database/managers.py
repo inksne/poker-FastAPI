@@ -134,7 +134,28 @@ class RedisManager:
     
     def remove_raise_amount(self, table_id: int) -> None:
         self.r.delete(f'{table_id}:raise_amount')
+        
 
+    def add_community_cards(self, table_id: int, community_cards: dict) -> None:
+        self.r.set(f'{table_id}:community_cards:flop', ','.join(community_cards['flop']))
+        self.r.set(f'{table_id}:community_cards:turn', ','.join(community_cards['turn']))
+        self.r.set(f'{table_id}:community_cards:river', ','.join(community_cards['river']))
+
+    def get_community_cards(self, table_id: int) -> dict:
+        flop = self.r.get(f'{table_id}:community_cards:flop')
+        turn = self.r.get(f'{table_id}:community_cards:turn')
+        river = self.r.get(f'{table_id}:community_cards:river')
+
+        return {
+            'flop': flop.decode().split(',') if isinstance(flop, bytes) else flop if flop else [],
+            'turn': turn.decode().split(',') if isinstance(turn, bytes) else turn if turn else [],
+            'river': river.decode().split(',') if isinstance(river, bytes) else river if river else []
+        }
+
+    def remove_community_cards(self, table_id: int) -> None:
+        self.r.delete(f'{table_id}:community_cards:flop')
+        self.r.delete(f'{table_id}:community_cards:turn')
+        self.r.delete(f'{table_id}:community_cards:river')
 
 redis_manager = RedisManager()
 
