@@ -10,10 +10,10 @@ game_stages = ('Preflop', 'Flop', 'Turn', 'River')
 current_stage = 0
 
 
-async def send_game_stage(websocket: WebSocket) -> None:
+async def send_game_stage_cards_and_game_started(community_cards: dict) -> None:
     global current_stage
     stage = game_stages[current_stage]
-    await websocket.send_text(json.dumps({'game_stage': stage}))
+    await ws_manager.broadcast({'game_started': True, 'game_stage': stage, 'community_cards': community_cards})
 
 
 async def send_game_stage_global() -> None:
