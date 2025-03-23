@@ -10,7 +10,7 @@ from database.database import get_async_session
 from database.managers import redis_manager, psql_manager
 from config import ws_manager, logger
 from auth.validation import ws_verify_user
-from exceptions import ws_not_found_table, ws_max_players, ws_server_exc
+from exceptions import ws_not_found_table, ws_max_players, ws_server_exc, wrong_amount_for_raise
 
 from .card_helpers import check_player_cards_periodically, deal_cards
 from .stage_and_turn_helpers import send_game_stage_cards_and_game_started, send_current_turn_and_pot, check_player_right_turn
@@ -124,7 +124,7 @@ async def ws_game_page(
 
                 raise_amount = data.get('amount')
                 if not raise_amount or raise_amount <= 0:
-                    await websocket.send_text(json.dumps({"error": "Неверная сумма для raise."}))
+                    await websocket.send_text(wrong_amount_for_raise)
                     continue
 
                 logger.info(f'{username} делает raise на сумму {raise_amount}')

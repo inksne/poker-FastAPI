@@ -1,13 +1,16 @@
 from fastapi.websockets import WebSocket
 
-import json
-
 from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, logger
 
-from .stage_and_turn_helpers import check_all_players_done, proceed_to_next_stage, send_game_stage_cards_and_game_started, get_next_turn
-
+from .stage_and_turn_helpers import (
+    check_all_players_done,
+    proceed_to_next_stage,
+    send_game_stage_cards_and_game_started,
+    get_next_turn
+)
+from exceptions import not_enough_funds_for_small_blind, not_enough_funds_for_call, check_done
 
 async def process_call_bet(
     websocket: WebSocket,
@@ -41,24 +44,24 @@ async def process_call_bet(
         if current_turn == small_blind_index:
             if current_stage == 'Preflop':
                 if player_balance < small_blind:
-                    await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
+                    await websocket.send_text(not_enough_funds_for_small_blind)
                     return
                 redis_manager.update_player_balance(username, player_balance, -small_blind)
                 redis_manager.update_pot(table.id, small_blind)
             else:
-                await websocket.send_text(json.dumps({"info": "Сделан check."}))
+                await websocket.send_text(check_done)
 
         elif current_turn == big_blind_index:
-            await websocket.send_text(json.dumps({"info": "Сделан check."}))
+            await websocket.send_text(check_done)
 
         else:
             if player_balance < big_blind:
-                await websocket.send_text(json.dumps({"error": "Недостаточно средств для call."}))
+                await websocket.send_text(not_enough_funds_for_call)
                 return
             
     else:
         if player_balance < raise_amount:
-            await websocket.send_text(json.dumps({"error": f"Недостаточно средств для call на {raise_amount}."}))
+            await websocket.send_text(not_enough_funds_for_call)
             return
 
         redis_manager.update_player_balance(username, player_balance, -raise_amount)

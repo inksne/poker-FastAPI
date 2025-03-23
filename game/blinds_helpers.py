@@ -1,10 +1,9 @@
 from fastapi.websockets import WebSocket
 
-import json
-
 from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, logger
+from exceptions import not_enough_funds_for_big_blind, not_enough_funds_for_small_blind
 
 
 def get_blinds_and_dealer(players: list[dict]) -> int:
@@ -52,10 +51,10 @@ async def process_blind_bets(
             logger.info(f'{table.id} баланс найден: {player_balance}')
 
         if player_balance < small_blind and index == small_blind_index:
-            await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
+            await websocket.send_text(not_enough_funds_for_small_blind)
             return
         if player_balance < big_blind and index == big_blind_index:
-            await websocket.send_text(json.dumps({"error": "Недостаточно средств для большого блайнда."}))
+            await websocket.send_text(not_enough_funds_for_big_blind)
             return
 
         if index == small_blind_index:
