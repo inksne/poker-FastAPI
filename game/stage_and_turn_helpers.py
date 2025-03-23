@@ -1,9 +1,8 @@
 from fastapi.websockets import WebSocket
 
-import json
-
 from config import logger, ws_manager
 from database.managers import redis_manager
+from exceptions import player_folded, other_turn
 
 
 game_stages = ('Preflop', 'Flop', 'Turn', 'River')
@@ -54,7 +53,7 @@ async def check_all_players_done(players: list[dict], table_id: int) -> bool:
 
 async def check_player_right_turn(websocket: WebSocket, table_id: int, username: str) -> bool:
     if redis_manager.get_player_folded(table_id, username):
-        await websocket.send_text(json.dumps({"error": "Вы больше не участвуете в этом раунде."}))
+        await websocket.send_text(player_folded)
         return False
 
     players = redis_manager.get_players(table_id)
@@ -62,7 +61,7 @@ async def check_player_right_turn(websocket: WebSocket, table_id: int, username:
 
     current_player = players[current_turn]
     if current_player['username'] != username:
-        await websocket.send_text(json.dumps({"error": "Не ваш ход!"}))
+        await websocket.send_text(other_turn)
         return False
     
     return True

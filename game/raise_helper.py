@@ -1,12 +1,11 @@
 from fastapi.websockets import WebSocket
 
-import json
-
 from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, logger
 
 from .stage_and_turn_helpers import check_all_players_done, get_next_turn
+from exceptions import twice_raise, raise_less_than_old, not_enough_funds_for_raise
 
 
 async def process_raise_bet(
@@ -35,16 +34,16 @@ async def process_raise_bet(
         logger.info(f'{table.id} баланс найден: {player_balance}')
 
     if raise_amount < big_blind // 2:
-        await websocket.send_text(json.dumps({"error": "Raise должен быть не меньше, чем двойной размер большого блайнда."}))
+        await websocket.send_text(twice_raise)
         return
 
     if old_raise_amount:
         if raise_amount <= old_raise_amount:
-            await websocket.send_text(json.dumps({"error": "Ваш raise должен быть выше, чем raise другого игрока."}))
+            await websocket.send_text(raise_less_than_old)
             return
 
     if player_balance < raise_amount:
-        await websocket.send_text(json.dumps({"error": "Недостаточно средств для raise."}))
+        await websocket.send_text(not_enough_funds_for_raise)
         return
 
     redis_manager.update_player_balance(username, player_balance, -raise_amount)
