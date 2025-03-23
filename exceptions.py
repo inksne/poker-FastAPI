@@ -1,6 +1,8 @@
 from fastapi import HTTPException, WebSocketException
 from starlette import status
 
+import json
+
 
 # HTTP
 
@@ -114,3 +116,27 @@ ws_max_players = WebSocketException(
     code=status.WS_1008_POLICY_VIOLATION,
     reason='За данным столом уже находится максимальное количество игроков.'
 )
+
+
+# WS (строки)
+
+
+not_enough_funds_for_big_blind = json.dumps({"error": "Недостаточно средств для большого блайнда."})
+
+not_enough_funds_for_small_blind = json.dumps({"error": "Недостаточно средств для малого блайнда."})
+
+not_enough_funds_for_call = json.dumps({"error": "Недостаточно средств для call."})
+
+twice_raise = json.dumps({"error": "Raise должен быть не меньше, чем двойной размер большого блайнда."})
+
+raise_less_than_old = json.dumps({"error": "Ваш raise должен быть выше, чем raise другого игрока."})
+
+not_enough_funds_for_raise = json.dumps({"error": "Недостаточно средств для raise."})
+
+wrong_amount_for_raise = json.dumps({"error": "Неверная сумма для raise."})
+
+player_folded = json.dumps({"error": "Вы больше не участвуете в этом раунде."})
+
+other_turn = json.dumps({"error": "Не ваш ход!"})
+
+check_done = json.dumps({"info": "Сделан check."})
