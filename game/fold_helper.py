@@ -16,7 +16,7 @@ async def process_fold(players: list[dict], table_id: int, community_cards: dict
 
     if all_done:
         await proceed_to_next_stage()
-        await send_game_stage_cards_and_game_started(community_cards)
+        await send_game_stage_cards_and_game_started(community_cards, table_id)
 
     next_turn = get_next_turn(players, table_id, current_turn)
     redis_manager.add_current_turn(table_id, next_turn)
