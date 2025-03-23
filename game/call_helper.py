@@ -33,14 +33,20 @@ async def process_call_bet(
         logger.info(f'{table.id} баланс найден: {player_balance}')
 
     raise_amount = redis_manager.get_raise_amount(table.id)
+    current_stage = redis_manager.get_current_stage(table.id)
+
+    logger.info(f'current_stage: {current_stage}')
 
     if not raise_amount:
         if current_turn == small_blind_index:
-            if player_balance < small_blind:
-                await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
-                return
-            redis_manager.update_player_balance(username, player_balance, -small_blind)
-            redis_manager.update_pot(table.id, small_blind)
+            if current_stage == 'Preflop':
+                if player_balance < small_blind:
+                    await websocket.send_text(json.dumps({"error": "Недостаточно средств для малого блайнда."}))
+                    return
+                redis_manager.update_player_balance(username, player_balance, -small_blind)
+                redis_manager.update_pot(table.id, small_blind)
+            else:
+                await websocket.send_text(json.dumps({"info": "Сделан check."}))
 
         elif current_turn == big_blind_index:
             await websocket.send_text(json.dumps({"info": "Сделан check."}))
@@ -66,7 +72,7 @@ async def process_call_bet(
 
     if all_done:
         await proceed_to_next_stage()
-        await send_game_stage_cards_and_game_started(community_cards)
+        await send_game_stage_cards_and_game_started(community_cards, table.id)
         redis_manager.remove_raise_amount(table.id)
         redis_manager.set_player_done_move(table.id, username, False)
 
