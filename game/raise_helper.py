@@ -25,12 +25,23 @@ async def process_raise_bet(
     username = current_player['username']
 
     player_balance = redis_manager.get_player_balance(username)
+    old_raise_amount = redis_manager.get_raise_amount(table.id)
+
     if not player_balance:
         player_balance = table.start_money
         logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
     else:
         player_balance = int(player_balance)
         logger.info(f'{table.id} баланс найден: {player_balance}')
+
+    if raise_amount < big_blind // 2:
+        await websocket.send_text(json.dumps({"error": "Raise должен быть не меньше, чем двойной размер большого блайнда."}))
+        return
+
+    if old_raise_amount:
+        if raise_amount <= old_raise_amount:
+            await websocket.send_text(json.dumps({"error": "Ваш raise должен быть выше, чем raise другого игрока."}))
+            return
 
     if player_balance < raise_amount:
         await websocket.send_text(json.dumps({"error": "Недостаточно средств для raise."}))
