@@ -79,7 +79,7 @@ async def ws_game_page(
 
                 await websocket.send_text(json.dumps({'cards': cards_for_players}))
 
-                await send_game_stage_cards_and_game_started(community_cards)
+                await send_game_stage_cards_and_game_started(community_cards, table_id)
 
                 dealer_index, small_blind_index, big_blind_index = get_blinds_and_dealer(players_list)
 
@@ -99,6 +99,7 @@ async def ws_game_page(
 
                 players = redis_manager.get_players(table_id)
                 community_cards = redis_manager.get_community_cards(table_id)
+                current_stage = redis_manager.get_current_stage(table_id)
 
                 small_blind_index, big_blind_index, dealer_index = redis_manager.get_indexes(table_id)
 
@@ -151,6 +152,7 @@ async def ws_game_page(
             redis_manager.remove_pot(table_id)
             redis_manager.remove_raise_amount(table_id)
             redis_manager.remove_community_cards(table_id)
+            redis_manager.remove_current_stage(table_id)
 
             players = redis_manager.get_players(table_id)
             for player in players:

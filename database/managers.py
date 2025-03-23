@@ -157,6 +157,18 @@ class RedisManager:
         self.r.delete(f'{table_id}:community_cards:turn')
         self.r.delete(f'{table_id}:community_cards:river')
 
+
+    def add_current_stage(self, table_id: int, stage: str) -> None:
+        self.r.set(f'{table_id}:current_stage', stage)
+
+    def get_current_stage(self, table_id: int) -> str:
+        stage = self.r.get(f'{table_id}:current_stage')
+        return stage.decode() if isinstance(stage, bytes) else stage
+    
+    def remove_current_stage(self, table_id: int) -> None:
+        self.r.delete(f'{table_id}:current_stage')
+        
+
 redis_manager = RedisManager()
 
 
