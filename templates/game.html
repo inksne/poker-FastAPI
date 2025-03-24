@@ -385,6 +385,14 @@
                 pot = data.pot;
                 document.getElementById('potDisplay').innerText = `Пот: ${pot}`;
             }
+
+            if (data.game_over) {
+                alert(`Победитель ${data.winner} с комбинацией ${data.combination}`);
+                resetGameDisplay();
+                if (isCreator) {
+                    document.getElementById('startGameButton').style.display = 'inline-block';
+                }
+            }
         };
 
         socket.onclose = function(event) {
@@ -471,6 +479,49 @@
 
         function updateCallButtonVisibility() {
             document.getElementById('callButton').style.display = 'inline-block';
+        }
+
+        function resetGameDisplay() {
+            for (let i = 1; i <= 6; i++) {
+                const cardElement = document.getElementById(`cards-${i}`);
+                const balanceElement = document.getElementById(`balance-${i}`);
+                
+                if (cardElement) {
+                    cardElement.innerText = '';
+                }
+                if (balanceElement) {
+                    balanceElement.innerText = '';
+                }
+            }
+
+            const communityCardsContainer = document.getElementById('communityCards');
+            if (communityCardsContainer) {
+                communityCardsContainer.innerHTML = '';
+            }
+
+            const callButton = document.getElementById('callButton');
+            const foldButton = document.getElementById('foldButton');
+            const bettingOptions = document.getElementById('bettingOptions');
+
+            if (callButton) {
+                callButton.style.display = 'none';
+            }
+            if (foldButton) {
+                foldButton.style.display = 'none';
+            }
+            if (bettingOptions) {
+                bettingOptions.style.display = 'none';
+            }
+
+            const gameStageElement = document.getElementById('gameStage');
+            const blindsAndDealerElement = document.getElementById('blindsAndDealer');
+
+            if (gameStageElement) {
+                gameStageElement.innerText = '';
+            }
+            if (blindsAndDealerElement) {
+                blindsAndDealerElement.innerText = '';
+            }
         }
 
         function displayErrorMessage(message) {
