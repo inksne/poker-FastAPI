@@ -38,9 +38,9 @@ class RedisManager:
         self.r.delete(username)
 
 
-    def get_player_balance(self, username: str) -> str:
+    def get_player_balance(self, username: str) -> int:
         balance = self.r.get(f'{username}:balance')
-        return balance.decode() if isinstance(balance, bytes) else balance
+        return int(balance.decode()) if isinstance(balance, bytes) else balance
 
     def set_player_balance(self, username: str, balance: int) -> None:
         self.r.set(f'{username}:balance', balance)
@@ -161,9 +161,9 @@ class RedisManager:
     def add_current_stage(self, table_id: int, stage: str) -> None:
         self.r.set(f'{table_id}:current_stage', stage)
 
-    def get_current_stage(self, table_id: int) -> str:
+    def get_current_stage(self, table_id: int) -> str | int:
         stage = self.r.get(f'{table_id}:current_stage')
-        return stage.decode() if isinstance(stage, bytes) else stage
+        return stage.decode() if isinstance(stage, bytes) else stage if stage else 0
     
     def remove_current_stage(self, table_id: int) -> None:
         self.r.delete(f'{table_id}:current_stage')
