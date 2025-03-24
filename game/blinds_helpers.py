@@ -47,7 +47,6 @@ async def process_blind_bets(
             player_balance = table.start_money
             logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
         else:
-            player_balance = int(player_balance)
             logger.info(f'{table.id} баланс найден: {player_balance}')
 
         if player_balance < small_blind and index == small_blind_index:
