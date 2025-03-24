@@ -30,7 +30,6 @@ async def process_raise_bet(
         player_balance = table.start_money
         logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
     else:
-        player_balance = int(player_balance)
         logger.info(f'{table.id} баланс найден: {player_balance}')
 
     if raise_amount < big_blind // 2:

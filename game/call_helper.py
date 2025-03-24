@@ -10,10 +10,12 @@ from .stage_and_turn_helpers import (
     send_game_stage_cards_and_game_started,
     get_next_turn
 )
+from .card_helpers import check_winner_and_end_game
 from exceptions import not_enough_funds_for_small_blind, not_enough_funds_for_call, check_done
 
 async def process_call_bet(
     websocket: WebSocket,
+    username: str,
     players: list[dict],
     small_blind_index: int,
     big_blind_index: int,
@@ -32,7 +34,6 @@ async def process_call_bet(
         player_balance = table.start_money
         logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
     else:
-        player_balance = int(player_balance)
         logger.info(f'{table.id} баланс найден: {player_balance}')
 
     raise_amount = redis_manager.get_raise_amount(table.id)
@@ -78,6 +79,10 @@ async def process_call_bet(
         await send_game_stage_cards_and_game_started(community_cards, table.id)
         redis_manager.remove_raise_amount(table.id)
         redis_manager.set_player_done_move(table.id, username, False)
+
+        if current_stage == 'River':
+            players = redis_manager.get_players(table.id)
+            await check_winner_and_end_game(websocket, username, players, table.id)
 
     balance_data = {}
     for player in players:
