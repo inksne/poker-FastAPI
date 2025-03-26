@@ -89,7 +89,7 @@
                         <td>{{ table.big_blind }}</td>
                         <td>{{ table.small_blind }}</td>
                         <td>{{ table.start_money }}</td>
-                        <td id="player-count-{{ table.id }}">{{ table.player_count }}</td>
+                        <td id="player-count-{{ table.id }}">{{ table.player_count }}/6</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -111,7 +111,7 @@
                 .then(data => {
                     console.log(`количество игроков для стола ${tableId}:`, data.player_count);
                     if (playerCountElement) {
-                        playerCountElement.textContent = data.player_count;
+                        playerCountElement.textContent = `${data.player_count}/6`;
                     }
                 })
                 .catch(error => console.error("ошибка при обновлении количества игроков:", error));
@@ -135,7 +135,7 @@
 
         function joinGame(row) {
             const tableId = row.getAttribute('data-table-id');
-            const socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
+            const socket = new WebSocket(`wss://${window.location.host}/authenticated/game/${tableId}`);
 
             socket.onopen = function() {
                 console.log("подключение к игре установлено");
