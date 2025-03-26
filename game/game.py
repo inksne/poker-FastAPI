@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Cookie, Depends
 from fastapi.websockets import WebSocket, WebSocketDisconnect
-from starlette import status
 
 import json
 import asyncio
@@ -10,7 +9,7 @@ from database.database import get_async_session
 from database.managers import redis_manager, psql_manager
 from config import ws_manager, logger
 from auth.validation import ws_verify_user
-from exceptions import ws_not_found_table, ws_max_players, ws_server_exc, wrong_amount_for_raise
+from exceptions import wrong_amount_for_raise, ws_server_exc
 
 from .card_helpers import check_player_cards_periodically, deal_cards, send_player_combinations
 from .stage_and_turn_helpers import send_game_stage_cards_and_game_started, send_current_turn_and_pot, check_player_right_turn
@@ -37,15 +36,7 @@ async def ws_game_page(
 
         table = await psql_manager.get_table_by_id(table_id, session)
 
-        if not table:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            raise ws_not_found_table
-
         players = redis_manager.get_players(table_id)
-
-        if len(players) > 10:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            raise ws_max_players
 
         logger.warning(players)
 
@@ -153,7 +144,7 @@ async def ws_game_page(
 
         players = redis_manager.get_players(table_id)
         if len(players) == 0:
-            logger.info(f'удаление пота, индексов и текущей очереди для {table_id}')
+            logger.info(f'удаление пота, индексов, текущей очереди и стола {table_id}')
             redis_manager.remove_current_turn(table_id)
             redis_manager.remove_indexes(table_id)
             redis_manager.remove_pot(table_id)
@@ -161,7 +152,8 @@ async def ws_game_page(
             redis_manager.remove_community_cards(table_id)
             redis_manager.remove_current_stage(table_id)
 
-            players = redis_manager.get_players(table_id)
+            await psql_manager.delete_table_by_id(table_id, session)
+
             for player in players:
                 redis_manager.remove_player_done_move(table_id, player['username'])
                 redis_manager.remove_player_folded(table_id, player['username'])
