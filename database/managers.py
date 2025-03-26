@@ -8,11 +8,12 @@ from sqlalchemy.future import select
 
 from .database import get_async_session
 from .models import Table
+from config import REDIS_HOST
 
 
 class RedisManager:
     def __init__(self):
-        self.r = Redis(host='localhost')
+        self.r = Redis(host=REDIS_HOST)
 
 
     def add_player(self, table_id: int, username: str) -> None:
@@ -179,18 +180,32 @@ class PSQLManager:
             .options(selectinload(Table.creator))
             .where(Table.id == table_id)
         )
+
         table = result_table.scalars().first()
         return table
     
+
     async def get_all_tables(self, session: AsyncSession = Depends(get_async_session)) -> Table:
         result_tables = await session.execute(select(Table))
         tables = result_tables.scalars().all()
         return tables
     
+
     async def get_tables_by_query(self, query: str, session: AsyncSession = Depends(get_async_session)) -> Table:
         result_tables = await session.execute(select(Table).where(Table.name.ilike(f"%{query}%")))
         tables = result_tables.scalars().all()
         return tables
+    
+
+    async def delete_table_by_id(self, table_id: int, session: AsyncSession = Depends(get_async_session)) -> None:
+        result_table = await session.execute(select(Table).where(Table.id == table_id))
+        table = result_table.scalar_one_or_none()
+
+        if not table:
+            return
+
+        await session.delete(table)
+        await session.commit()
     
 
 psql_manager = PSQLManager()
