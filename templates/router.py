@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette import status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_async_session
@@ -8,7 +9,6 @@ from database.managers import redis_manager, psql_manager
 from database.models import User
 
 from auth.validation import get_current_auth_user
-from exceptions import not_found_table
 from config import logger
 
 
@@ -82,11 +82,14 @@ async def game_page(
     table = await psql_manager.get_table_by_id(table_id, session)
 
     if not table:
-        raise not_found_table
+        return RedirectResponse('/authenticated/search', status_code=status.HTTP_301_MOVED_PERMANENTLY)
+    
+    players = redis_manager.get_players(table_id)
+
+    if len(players) >= 6:
+        return RedirectResponse('/authenticated/search', status_code=status.HTTP_303_SEE_OTHER)
 
     redis_manager.add_player(table_id, current_user.username)
-
-    players = redis_manager.get_players(table_id)
 
     logger.warning(players)
 
