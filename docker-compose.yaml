@@ -9,7 +9,7 @@ services:
       - "10000:10000"
     env_file:
       - ./.env
-    command: ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 10000"]
+    command: ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 10000 --ssl-keyfile=/app/certs/server.key --ssl-certfile=/app/certs/server.crt"]
     restart: always
     depends_on:
       - postgres
