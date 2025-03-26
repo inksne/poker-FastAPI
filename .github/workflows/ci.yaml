@@ -1,4 +1,4 @@
-name: Зщлук CI Pipeline
+name: Poker CI Pipeline
 
 on:
   push:
@@ -16,6 +16,10 @@ jobs:
       POSTGRES_USER: ${{ secrets.DB_USER }}
       POSTGRES_PASSWORD: ${{ secrets.DB_PASS }}
       POSTGRES_DB: ${{ secrets.DB_NAME }}
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+
       TEST_ACCESS_TOKEN: ${{ secrets.TEST_ACCESS_TOKEN }}
     
     steps:
@@ -53,7 +57,14 @@ jobs:
           docker pull inksne/poker-back-image:latest
 
       - name: Run tests
-        run: docker run -e POSTGRES_DB=${{ secrets.DB_NAME }} -e POSTGRES_USER=${{ secrets.DB_USER }} -e POSTGRES_PASSWORD=${{ secrets.DB_PASS }} -e TEST_ACCESS_TOKEN=${{ secrets.TEST_ACCESS_TOKEN }} --rm inksne/poker-back-image pytest -v -s
+        run: docker run \
+          -e POSTGRES_DB=${{ secrets.DB_NAME }} \
+          -e POSTGRES_USER=${{ secrets.DB_USER }} \
+          -e POSTGRES_PASSWORD=${{ secrets.DB_PASS }} \
+          -e POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e TEST_ACCESS_TOKEN=${{ secrets.TEST_ACCESS_TOKEN }} \
+          --rm inksne/poker-back-image pytest -v -s
 
   # deploy:
   #   runs-on: ubuntu-latest
