@@ -44,7 +44,9 @@ async def post_create_table_page(
         session.add(new_table)
         await session.commit()
 
-        return {"table": new_table, "redirect_url": f"/authenticated/game/{new_table.id}"}
+        table_response = CreateTableRequest.from_attributes(new_table)
+
+        return {"table": table_response.model_dump(), "redirect_url": f"/authenticated/game/{new_table.id}"}
     except IntegrityError:
         await session.rollback()
         raise conflict_table
