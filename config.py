@@ -18,6 +18,11 @@ load_dotenv()
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "inksne")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "inksne")
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "inksne")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
+
+TEST_ACCESS_TOKEN = os.environ.get("TEST_ACCESS_TOKEN")
 
 
 class AuthJWT(BaseModel):
@@ -36,7 +41,7 @@ settings = Settings()
 
 
 class DBSettings(BaseSettings):
-    db_url: str = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}'
+    db_url: str = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}'
     db_echo: bool = False
 
 
