@@ -45,7 +45,7 @@ jobs:
         run: |
           docker push inksne/poker-back-image:latest
 
-          
+
   test:
     runs-on: ubuntu-latest
     needs: build  
@@ -60,14 +60,15 @@ jobs:
           docker pull inksne/poker-back-image:latest
 
       - name: Run tests
-        run: docker run \
-          -e POSTGRES_DB=${{ secrets.DB_NAME }} \
-          -e POSTGRES_USER=${{ secrets.DB_USER }} \
-          -e POSTGRES_PASSWORD=${{ secrets.DB_PASS }} \
-          -e POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e TEST_ACCESS_TOKEN=${{ secrets.TEST_ACCESS_TOKEN }} \
-          --rm inksne/poker-back-image pytest -v -s
+        run: |
+          docker run \
+            -e POSTGRES_DB="${{ secrets.DB_NAME }}" \
+            -e POSTGRES_USER="${{ secrets.DB_USER }}" \
+            -e POSTGRES_PASSWORD="${{ secrets.DB_PASS }}" \
+            -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
+            -e REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+            -e TEST_ACCESS_TOKEN="${{ secrets.TEST_ACCESS_TOKEN }}" \
+            --rm inksne/poker-back-image pytest -v -s
 
 
   # deploy:
