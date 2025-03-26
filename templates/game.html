@@ -298,7 +298,7 @@
             river: []
         };
 
-        socket = new WebSocket(`ws://${window.location.host}/authenticated/game/${tableId}`);
+        socket = new WebSocket(`wss://${window.location.host}/authenticated/game/${tableId}`);
 
         socket.onopen = function(event) {
             console.log('подключение установлено');
@@ -334,15 +334,10 @@
                 displayCards(playerCards);
             }
 
-            if (data.community_cards) {
-                console.log('все карты:', data.community_cards)
-            }
-
             if (data.game_stage) {
                 document.getElementById('gameStage').innerText = `Текущая стадия: ${data.game_stage}`;
 
                 if (data.community_cards) {
-                    console.log('все карты:', data.community_cards);
                     console.log('gameStage:', data.game_stage);
                     if (data.game_stage === "Flop") {
                         communityCards.flop = data.community_cards.flop;
