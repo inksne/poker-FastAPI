@@ -47,6 +47,11 @@ async def process_call_bet(
 
     logger.debug(f'current_stage: {current_stage}')
 
+    if small_blind_index >= len(players):
+        small_blind_index = 0
+    if big_blind_index >= len(players):
+        big_blind_index = 1 if len(players) > 1 else 0
+
     if not raise_amount:
         if current_turn == small_blind_index:
             if current_stage == 'Preflop':

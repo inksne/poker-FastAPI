@@ -67,6 +67,10 @@ async def check_player_right_turn(websocket: WebSocket, table_id: int, username:
     players = redis_manager.get_players(table_id)
     current_turn = redis_manager.get_current_turn(table_id)
 
+    if current_turn is not None and current_turn >= len(players):
+        current_turn = 0
+        redis_manager.add_current_turn(table_id, current_turn)
+
     current_player = players[current_turn]
     if current_player['username'] != username:
         await websocket.send_text(other_turn)

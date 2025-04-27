@@ -25,6 +25,11 @@ async def process_raise_bet(
     big_blind = table.big_blind
 
     current_turn = redis_manager.get_current_turn(table.id)
+
+    if current_turn is not None and current_turn >= len(players):
+        current_turn = 0
+        redis_manager.add_current_turn(table.id, current_turn)
+    
     current_player = players[current_turn]
     username = current_player['username']
 
@@ -62,6 +67,11 @@ async def process_raise_bet(
     all_done = await check_all_players_done(players, table.id)
 
     logger.debug(f'all done: {all_done}')
+
+    if small_blind_index >= len(players):
+        small_blind_index = 0
+    if big_blind_index >= len(players):
+        big_blind_index = 1 if len(players) > 1 else 0
 
     if all_done:
         next_turn = get_next_turn(players, table.id, current_turn)
