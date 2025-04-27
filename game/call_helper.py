@@ -1,9 +1,10 @@
 from fastapi.websockets import WebSocket
 
+import logging
+
 from database.models import Table
 from database.managers import redis_manager
-from config import ws_manager, logger
-
+from config import ws_manager, configure_logging
 from .stage_and_turn_helpers import (
     check_all_players_done,
     proceed_to_next_stage,
@@ -12,6 +13,11 @@ from .stage_and_turn_helpers import (
 )
 from .card_helpers import check_winner_and_end_game
 from exceptions import not_enough_funds_for_small_blind, not_enough_funds_for_call, check_done
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
+
 
 async def process_call_bet(
     websocket: WebSocket,
@@ -32,14 +38,14 @@ async def process_call_bet(
     player_balance = redis_manager.get_player_balance(username)
     if not player_balance:
         player_balance = table.start_money
-        logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
+        logger.debug(f'{table.id} баланс не найден, значение psql: {player_balance}')
     else:
-        logger.info(f'{table.id} баланс найден: {player_balance}')
+        logger.debug(f'{table.id} баланс найден: {player_balance}')
 
     raise_amount = redis_manager.get_raise_amount(table.id)
     current_stage = redis_manager.get_current_stage(table.id)
 
-    logger.info(f'current_stage: {current_stage}')
+    logger.debug(f'current_stage: {current_stage}')
 
     if not raise_amount:
         if current_turn == small_blind_index:
@@ -72,7 +78,7 @@ async def process_call_bet(
 
     all_done = await check_all_players_done(players, table.id)
 
-    logger.info(f'all done: {all_done}')
+    logger.debug(f'all done: {all_done}')
 
     if all_done:
         await proceed_to_next_stage()
@@ -99,7 +105,7 @@ async def process_call_bet(
     }
     await ws_manager.broadcast(blinds_info)
 
-    logger.info(f'до обновления current turn: {current_turn}')
+    logger.debug(f'до обновления current turn: {current_turn}')
     next_turn = get_next_turn(players, table.id, current_turn)
-    logger.info(f'после обновления current_turn: {next_turn}')
+    logger.debug(f'после обновления current_turn: {next_turn}')
     redis_manager.add_current_turn(table.id, next_turn)

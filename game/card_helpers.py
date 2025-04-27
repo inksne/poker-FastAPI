@@ -4,11 +4,16 @@ from random import shuffle
 from collections import Counter
 import json
 import asyncio
+import logging
 
 from poker import Card
-from config import ws_manager, logger
+from config import ws_manager, configure_logging
 from database.managers import redis_manager
 from .stage_and_turn_helpers import send_game_stage_global
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 def create_deck() -> list:
@@ -159,14 +164,14 @@ async def check_player_cards_periodically(websocket: WebSocket, username: str) -
             if websocket.client_state == WebSocketState.CONNECTED:
                 player_cards = redis_manager.get_player_cards(username)
                 if player_cards:
-                    logger.info(f'карты найдены для {username}')
+                    logger.debug(f'карты найдены для {username}')
                     cards_for_players = {}
                     cards_for_players[username] = player_cards
                     await websocket.send_text(json.dumps({'game_started': True, 'cards': cards_for_players}))
                     await send_game_stage_global()
                     break
                 else:
-                    logger.info(f'карты не найдены для {username}')
+                    logger.debug(f'карты не найдены для {username}')
             else:
                 logger.error(f'ws закрыт для {username}')
                 break
@@ -203,6 +208,6 @@ async def check_winner_and_end_game(websocket: WebSocket, username: str, players
         redis_manager.remove_player_folded(table_id, player['username'])
         redis_manager.remove_player_done_move(table_id, player['username'])
 
-    logger.info(f'победитель {winner} с комбинацией {combinations[winner]}')
+    logger.debug(f'победитель {winner} с комбинацией {combinations[winner]}')
 
     asyncio.create_task(check_player_cards_periodically(websocket, username))

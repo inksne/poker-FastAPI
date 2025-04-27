@@ -3,11 +3,12 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect
 
 import json
 import asyncio
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_async_session
 from database.managers import redis_manager, psql_manager
-from config import ws_manager, logger
+from config import ws_manager, configure_logging
 from auth.validation import ws_verify_user
 from exceptions import wrong_amount_for_raise, ws_server_exc
 
@@ -17,6 +18,10 @@ from .blinds_helpers import get_blinds_and_dealer, send_blinds_and_dealer, proce
 from .call_helper import process_call_bet
 from .fold_helper import process_fold
 from .raise_helper import process_raise_bet
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(tags=['Game'])
@@ -49,14 +54,12 @@ async def ws_game_page(
 
             data = json.loads(result_data)
 
-            logger.warning(f'игроки до start_game: {players}')
-
             if data.get('action') == 'start_game':
                 logger.info(f"игра начинается за столом {table_id}")
 
                 players_list = redis_manager.get_players(table_id)
                 player_cards, community_cards = deal_cards(players_list)
-                logger.info(player_cards)
+                logger.debug(player_cards)
 
                 cards_for_players = {}
                 for player in players_list:
@@ -65,8 +68,7 @@ async def ws_game_page(
 
                 redis_manager.add_community_cards(table_id, community_cards)
 
-                logger.warning(f'игроки после: {players_list}')
-                logger.warning(f'карты: {player_cards}')
+                logger.debug(f'карты: {player_cards}')
 
                 await websocket.send_text(json.dumps({'cards': cards_for_players}))
 

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
-from starlette import status
+from fastapi.responses import HTMLResponse
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_async_session
@@ -9,6 +8,7 @@ from database.managers import redis_manager, psql_manager
 from database.models import User
 
 from auth.validation import get_current_auth_user
+from exceptions import not_found_table
 from config import logger
 
 
@@ -91,7 +91,7 @@ async def game_page(
 
     redis_manager.add_player(table_id, current_user.username)
 
-    logger.warning(players)
+    logger.debug(players)
 
     is_creator = table.creator.username == current_user.username
     

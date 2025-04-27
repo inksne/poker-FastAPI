@@ -1,7 +1,9 @@
 from fastapi.websockets import WebSocket
 
+import logging
+
 from database.managers import redis_manager
-from config import ws_manager, logger
+from config import ws_manager, configure_logging
 
 from .stage_and_turn_helpers import (
     check_all_players_done,
@@ -11,6 +13,10 @@ from .stage_and_turn_helpers import (
     check_single_player_left
 )
 from .card_helpers import check_winner_and_end_game
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 async def process_fold(
@@ -24,7 +30,7 @@ async def process_fold(
     current_player = players[current_turn]
     username = current_player['username']
 
-    logger.info(f'{username} сделал fold')
+    logger.debug(f'{username} сделал fold')
 
     redis_manager.set_player_done_move(table_id, username, True)
     redis_manager.set_player_folded(table_id, username, True)
@@ -32,7 +38,7 @@ async def process_fold(
 
     winner = await check_single_player_left(players, table_id)
     if winner:
-        logger.info(f'Победитель: {winner}')
+        logger.debug(f'победитель: {winner}')
         await check_winner_and_end_game(websocket, winner, players, table_id)
         return
     
