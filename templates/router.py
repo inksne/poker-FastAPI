@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request, Depends, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_async_session
 from database.managers import redis_manager, psql_manager
@@ -9,7 +11,11 @@ from database.models import User
 
 from auth.validation import get_current_auth_user
 from exceptions import not_found_table
-from config import logger
+from config import configure_logging
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(tags=['Templates'])
@@ -88,7 +94,7 @@ async def game_page(
 
     players = redis_manager.get_players(table_id)
 
-    logger.warning(players)
+    logger.debug(players)
 
     is_creator = table.creator.username == current_user.username
     

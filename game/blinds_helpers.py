@@ -1,9 +1,15 @@
 from fastapi.websockets import WebSocket
 
+import logging
+
 from database.models import Table
 from database.managers import redis_manager
-from config import ws_manager, logger
+from config import ws_manager, configure_logging
 from exceptions import not_enough_funds_for_big_blind, not_enough_funds_for_small_blind
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 def get_blinds_and_dealer(players: list[dict]) -> int:
@@ -45,9 +51,9 @@ async def process_blind_bets(
 
         if not player_balance:
             player_balance = table.start_money
-            logger.info(f'{table.id} баланс не найден, значение psql: {player_balance}')
+            logger.debug(f'{table.id} баланс не найден, значение psql: {player_balance}')
         else:
-            logger.info(f'{table.id} баланс найден: {player_balance}')
+            logger.debug(f'{table.id} баланс найден: {player_balance}')
 
         if player_balance < small_blind and index == small_blind_index:
             await websocket.send_text(not_enough_funds_for_small_blind)

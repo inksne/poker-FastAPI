@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 
+import logging
+
 from auth.validation import get_current_auth_user
 from basemodels import CreateTableRequest
-from config import logger
+from config import configure_logging
 from exceptions import bad_blinds, bad_big_blind_uneven, bad_big_blind_small_count, conflict_table, server_exc
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +12,10 @@ from sqlalchemy.exc import IntegrityError
 from database.database import get_async_session
 from database.managers import redis_manager
 from database.models import User, Table
+
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(tags=['API'])
