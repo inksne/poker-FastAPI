@@ -170,6 +170,6 @@ async def ws_game_page(
         logger.error(f'RuntimeError {e}')
 
 
-    # except Exception as e:
-    #     logger.error(e)
-    #     raise ws_server_exc
+    except Exception as e:
+        logger.error(e)
+        raise ws_server_exc
