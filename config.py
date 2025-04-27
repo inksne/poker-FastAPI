@@ -22,6 +22,8 @@ POSTGRES_HOST: Final[str] = os.environ.get("POSTGRES_HOST", "postgres")
 
 REDIS_HOST: Final[str] = os.environ.get("REDIS_HOST", "redis")
 
+TEST_ACCESS_TOKEN: Final[str] = os.environ.get("TEST_ACCESS_TOKEN")
+
 
 class AuthJWT(BaseModel):
     private_key_path: Path = Path("certs") / "jwt-private.pem"
