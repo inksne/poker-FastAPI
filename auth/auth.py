@@ -17,12 +17,10 @@ from database.database import get_async_session
 from database.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from config import configure_logging
-from exceptions import conflict_name, bad_email_exc, server_exc
+from exceptions import conflict_name, bad_email_exc
 
 from pydantic import BaseModel
 from datetime import timedelta
-import logging
 
 
 http_bearer = HTTPBearer(auto_error=False)
@@ -35,10 +33,6 @@ class TokenInfo(BaseModel):
 
 
 router = APIRouter(prefix='/jwt', tags=["JWT"], dependencies=[Depends(http_bearer)])
-
-
-configure_logging()
-logger = logging.getLogger(__name__)
 
 
 @router.post('/register')
@@ -56,18 +50,13 @@ async def register(
 
         session.add(new_user)
         await session.commit()
+        await session.refresh(new_user)
 
         return RedirectResponse('/jwt/login/', status_code=status.HTTP_303_SEE_OTHER)
     except IntegrityError:
-        await session.rollback()
         raise conflict_name
     except HTTPException:
-        await session.rollback()
         raise bad_email_exc
-    except Exception as e:
-        await session.rollback()
-        logger.error(e)
-        raise server_exc
 
 
 @router.post('/login/', response_model=TokenInfo)
@@ -119,7 +108,6 @@ async def auth_user_check_self_info(
         "email": user.email,
         "logged_in_at": iat,
     }
-
 
 @router.post('/logout')
 async def logout(response: Response):

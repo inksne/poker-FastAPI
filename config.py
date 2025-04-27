@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from pathlib import Path
 
-from typing import List
+from typing import List, Final
 
 import os
 import logging
@@ -15,20 +15,20 @@ import json
 load_dotenv()
 
 
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "inksne")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "inksne")
-POSTGRES_DB = os.environ.get("POSTGRES_DB", "inksne")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+POSTGRES_USER: Final[str] = os.environ.get("POSTGRES_USER", "inksne")
+POSTGRES_PASSWORD: Final[str] = os.environ.get("POSTGRES_PASSWORD", "inksne")
+POSTGRES_DB: Final[str] = os.environ.get("POSTGRES_DB", "inksne")
+POSTGRES_HOST: Final[str] = os.environ.get("POSTGRES_HOST", "postgres")
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
+REDIS_HOST: Final[str] = os.environ.get("REDIS_HOST", "redis")
 
-TEST_ACCESS_TOKEN = os.environ.get("TEST_ACCESS_TOKEN")
+TEST_ACCESS_TOKEN: Final[str] = os.environ.get("TEST_ACCESS_TOKEN")
 
 
 class AuthJWT(BaseModel):
     private_key_path: Path = Path("certs") / "jwt-private.pem"
     public_key_path: Path = Path("certs") / "jwt-public.pem"
-    algorithm: str = "RS256"
+    algorithm: Final[str] = "RS256"
     access_token_expire_minutes: int = 5
     refresh_token_expire_days: int = 30
 
@@ -42,7 +42,6 @@ settings = Settings()
 
 class DBSettings(BaseSettings):
     db_url: str = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}'
-    db_echo: bool = False
 
 
 db_settings = DBSettings()

@@ -28,7 +28,22 @@ def decode_jwt(
     public_key: str = settings.auth_jwt.public_key_path.read_text(),
     algorithm: str = settings.auth_jwt.algorithm,
 ):
-    return jwt.decode(token, public_key, algorithms=[algorithm])
+    decoded = jwt.decode(token, public_key, algorithms=[algorithm])
+    return decoded
+
+
+def decode_jwt_ws(
+    token: str,
+    public_key: str = settings.auth_jwt.public_key_path.read_text(),
+    algorithm: str = settings.auth_jwt.algorithm,
+):
+    try:
+        return jwt.decode(token, public_key, algorithms=[algorithm])
+    except jwt.ExpiredSignatureError:
+        raise ValueError("токен просрочен")
+    except jwt.JWTError:
+        raise ValueError("невалидный токен")
+
 
 
 def hash_password(password: str) -> bytes:

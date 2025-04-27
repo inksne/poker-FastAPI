@@ -1,34 +1,26 @@
-from fastapi import Depends, HTTPException, Request, Form, Cookie
+from fastapi import Depends, HTTPException, Request, Form
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from starlette import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-import logging
-
 from auth.helpers import TOKEN_TYPE_FIELD, ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE
 from auth.utils import decode_jwt, validate_password
 from auth.schemas import UserSchema
 from database.models import User
 from database.database import get_async_session
-from config import configure_logging
 from exceptions import (
     bad_token_exc,
     not_found_access_exc,
     not_found_refresh_exc,
     not_found_token_user_exc,
     unauthed_exc,
-    bad_email_exc,
-    ws_unauthorized_none_access,
-    ws_server_exc
+    bad_email_exc
 )
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/jwt/login")
-
-configure_logging()
-logger = logging.getLogger(__name__)
 
 
 def get_current_access_token_payload(request: Request) -> dict:
@@ -118,18 +110,3 @@ async def validate_auth_user_db(username: str = Form(...), password: str = Form(
 def validate_email(email: str):
     if email in [None, '', 'null'] or '@' not in email or '.' not in email:
         raise bad_email_exc
-    
-
-async def ws_verify_user(access_token: str = Cookie(None)):
-    if not access_token:
-        raise ws_unauthorized_none_access
-    
-    try:
-        payload = decode_jwt(access_token)
-        username = payload.get("sub")
-        if not username:
-            raise bad_token_exc
-        return username
-    except Exception as e:
-        logger.error(e)
-        raise ws_server_exc

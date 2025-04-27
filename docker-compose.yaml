@@ -12,8 +12,15 @@ services:
     command: ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 10000 --ssl-keyfile=/app/certs/server.key --ssl-certfile=/app/certs/server.crt"]
     restart: always
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /app
     networks:
       - app-network
       
