@@ -83,3 +83,14 @@ async def process_blind_bets(
         'big_blind_amount': big_blind
     }
     await ws_manager.broadcast(blinds_info)
+
+
+def check_player_balance_in_db(username: str, table: Table) -> int:
+    player_balance = redis_manager.get_player_balance(username)
+    if not player_balance:
+        player_balance = table.start_money
+        logger.debug(f'{table.id} баланс не найден, значение psql: {player_balance}')
+    else:
+        logger.debug(f'{table.id} баланс найден: {player_balance}')
+
+    return player_balance
