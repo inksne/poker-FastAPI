@@ -88,7 +88,7 @@ async def ws_game_page(
                 if not await check_player_right_turn(websocket, table_id, username):
                     continue
 
-                logger.info(f'{username} делает call')
+                logger.info(f'{username} делает call за столом {table_id}')
 
                 players = redis_manager.get_players(table_id)
                 community_cards = redis_manager.get_community_cards(table_id)
@@ -105,7 +105,7 @@ async def ws_game_page(
                 if not await check_player_right_turn(websocket, table_id, username):
                     continue
 
-                logger.info(f'{username} делает fold')
+                logger.info(f'{username} делает fold за столом {table_id}')
 
                 players = redis_manager.get_players(table_id)
                 community_cards = redis_manager.get_community_cards(table_id)
@@ -123,7 +123,7 @@ async def ws_game_page(
                     await websocket.send_text(wrong_amount_for_raise)
                     continue
 
-                logger.info(f'{username} делает raise на сумму {raise_amount}')
+                logger.info(f'{username} делает raise на сумму {raise_amount} за столом {table_id}')
 
                 players = redis_manager.get_players(table_id)
 
@@ -167,7 +167,7 @@ async def ws_game_page(
 
 
     except RuntimeError as e:
-        logger.error(f'RuntimeError {e}')
+        pass
 
 
     except Exception as e:

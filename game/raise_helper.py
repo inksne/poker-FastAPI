@@ -6,6 +6,7 @@ from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, configure_logging
 from .stage_and_turn_helpers import check_all_players_done, get_next_turn
+from .blinds_helpers import check_player_balance_in_db
 from exceptions import twice_raise, raise_less_than_old, not_enough_funds_for_raise
 
 
@@ -33,14 +34,8 @@ async def process_raise_bet(
     current_player = players[current_turn]
     username = current_player['username']
 
-    player_balance = redis_manager.get_player_balance(username)
     old_raise_amount = redis_manager.get_raise_amount(table.id)
-
-    if not player_balance:
-        player_balance = table.start_money
-        logger.debug(f'{table.id} баланс не найден, значение psql: {player_balance}')
-    else:
-        logger.debug(f'{table.id} баланс найден: {player_balance}')
+    player_balance = check_player_balance_in_db(username, table)
 
     if raise_amount < big_blind // 2:
         await websocket.send_text(twice_raise)

@@ -12,6 +12,7 @@ from .stage_and_turn_helpers import (
     get_next_turn
 )
 from .card_helpers import check_winner_and_end_game
+from .blinds_helpers import check_player_balance_in_db
 from exceptions import not_enough_funds_for_small_blind, not_enough_funds_for_call, check_done
 
 
@@ -35,12 +36,7 @@ async def process_call_bet(
     current_player = players[current_turn]
     username = current_player['username']
 
-    player_balance = redis_manager.get_player_balance(username)
-    if not player_balance:
-        player_balance = table.start_money
-        logger.debug(f'{table.id} баланс не найден, значение psql: {player_balance}')
-    else:
-        logger.debug(f'{table.id} баланс найден: {player_balance}')
+    player_balance = check_player_balance_in_db(username, table)
 
     raise_amount = redis_manager.get_raise_amount(table.id)
     current_stage = redis_manager.get_current_stage(table.id)
