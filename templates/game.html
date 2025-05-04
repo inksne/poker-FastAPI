@@ -1,5 +1,7 @@
 {% extends "authenticated.html" %}
 
+<title>Игра за столом {{ table.id }}</title>
+
 {% block styles %}
     {{ super() }}
     <style>
@@ -261,9 +263,7 @@
             <div class="player-cards" id="cards-6"></div>
         </div>
 
-        <div class="community-cards" id="communityCards">
-            <!-- Общие карты флопа, терна и ривера будут отображаться здесь -->
-        </div>
+        <div class="community-cards" id="communityCards"></div>
 
         <button id="startGameButton" class="start-button">Начать игру</button>
         <button id="callButton" class="call-button" style="display: none;">Call</button>
@@ -312,7 +312,7 @@
         };
 
         socket.onmessage = function(event) {
-            console.log('получено сообщение:', event.data);
+            // console.log('получено сообщение:', event.data);
             const data = JSON.parse(event.data);
 
             if (data.players) {
@@ -330,7 +330,7 @@
 
             if (data.cards) {
                 playerCards = data.cards;
-                console.log('полученные карты:', playerCards);
+                // console.log('полученные карты:', playerCards);
                 displayCards(playerCards);
             }
 
@@ -338,7 +338,7 @@
                 document.getElementById('gameStage').innerText = `Текущая стадия: ${data.game_stage}`;
 
                 if (data.community_cards) {
-                    console.log('gameStage:', data.game_stage);
+                    // console.log('gameStage:', data.game_stage);
                     if (data.game_stage === "Flop") {
                         communityCards.flop = data.community_cards.flop;
                         updateCommunityCards(communityCards.flop);
@@ -366,17 +366,17 @@
             }
 
             if (data.balance) {
-                console.log("обновление баланса:", data.balance);
+                // console.log("обновление баланса:", data.balance);
                 updatePlayerBalance(data.balance);
             }
 
             if (data.current_turn) {
-                console.log("ход:", data.current_turn);
+                // console.log("ход:", data.current_turn);
                 currentTurn = data.current_turn;
             }
 
             if (data.pot) {
-                console.log("pot:", data.pot);
+                // console.log("pot:", data.pot);
                 pot = data.pot;
                 document.getElementById('potDisplay').innerText = `Пот: ${pot}`;
             }
@@ -391,7 +391,7 @@
         };
 
         socket.onclose = function(event) {
-            console.log('подключение закрыто');
+            // console.log('подключение закрыто');
             document.getElementById('gameStatus').innerText = 'Вы покинули игру.';
         };
 
@@ -451,7 +451,7 @@
         }
 
         function updatePlayerBalance(balanceData) {
-            console.log('обновление баланса:', balanceData);
+            // console.log('обновление баланса:', balanceData);
 
             players.forEach((player, index) => {
                 const balance = balanceData[player.username];
