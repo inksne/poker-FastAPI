@@ -43,8 +43,6 @@ async def ws_game_page(
 
         players = redis_manager.get_players(table_id)
 
-        logger.warning(players)
-
         asyncio.create_task(check_player_cards_periodically(websocket, username))
 
         await ws_manager.broadcast_players_list()
