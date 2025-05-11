@@ -9,7 +9,6 @@ from sqlalchemy.future import select
 from config import REDIS_HOST
 from .database import get_async_session
 from .models import Table
-from config import REDIS_HOST
 
 
 class RedisManager:
