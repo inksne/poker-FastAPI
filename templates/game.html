@@ -455,7 +455,7 @@
 
             players.forEach((player, index) => {
                 const balance = balanceData[player.username];
-                if (balance) {
+                if (balance !== undefined && balance !== null) {
                     const balanceDiv = document.querySelector(`#balance-${index + 1}`);
                     if (balanceDiv) {
                         balanceDiv.innerText = `${balance}`;
