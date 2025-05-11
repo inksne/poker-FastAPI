@@ -50,14 +50,15 @@ async def process_call_bet(
 
     if not raise_amount:
         if current_turn == small_blind_index:
-            if current_stage == 'Preflop':
-                if player_balance < small_blind:
-                    await websocket.send_text(not_enough_funds_for_small_blind)
-                    return
-                redis_manager.update_player_balance(username, player_balance, -small_blind)
-                redis_manager.update_pot(table.id, small_blind)
+            if player_balance < small_blind:
+                await websocket.send_text(not_enough_funds_for_small_blind)
+                return
             else:
-                await websocket.send_text(check_done)
+                if current_stage == 'Preflop':
+                    redis_manager.update_player_balance(username, player_balance, -small_blind)
+                    redis_manager.update_pot(table.id, small_blind)
+                else:
+                    await websocket.send_text(check_done)
 
         elif current_turn == big_blind_index:
             await websocket.send_text(check_done)
