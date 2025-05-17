@@ -352,10 +352,10 @@
                 }
             }
 
-            if (data.blinds_and_dealer) {
-                const blindsAndDealer = data.blinds_and_dealer;
-                document.getElementById('blindsAndDealer').innerText = `Диллер: ${blindsAndDealer.dealer}, Малый блайнд: ${blindsAndDealer.small_blind}, Большой блайнд: ${blindsAndDealer.big_blind}`;
-            }
+            // if (data.blinds_and_dealer) {
+            //     const blindsAndDealer = data.blinds_and_dealer;
+            //     document.getElementById('blindsAndDealer').innerText = `Диллер: ${blindsAndDealer.dealer}, Малый блайнд: ${blindsAndDealer.small_blind}, Большой блайнд: ${blindsAndDealer.big_blind}`;
+            // }
 
             if (data.error) {
                 displayErrorMessage(data.error);
@@ -391,7 +391,7 @@
         };
 
         socket.onclose = function(event) {
-            // console.log('подключение закрыто');
+            console.log('подключение закрыто');
             document.getElementById('gameStatus').innerText = 'Вы покинули игру.';
         };
 
