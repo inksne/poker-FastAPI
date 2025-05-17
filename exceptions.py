@@ -111,7 +111,7 @@ not_enough_funds_for_raise = json.dumps({"error": "Недостаточно ср
 
 wrong_amount_for_raise = json.dumps({"error": "Неверная сумма для raise."})
 
-player_folded = json.dumps({"error": "Вы больше не участвуете в этом раунде."})
+player_folded_or_not_enough_money = json.dumps({"error": "Вы больше не участвуете в этом раунде."})
 
 other_turn = json.dumps({"error": "Не ваш ход!"})
 
