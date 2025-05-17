@@ -36,16 +36,16 @@ async def process_fold(
     redis_manager.set_player_folded(table_id, username, True)
     current_stage = redis_manager.get_current_stage(table_id)
 
-    winner = await check_single_player_left(players, table_id)
+    winner = check_single_player_left(players, table_id)
     if winner:
         logger.debug(f'победитель: {winner}')
         await check_winner_and_end_game(websocket, winner, players, table_id)
         return
     
-    all_done = await check_all_players_done(players, table_id)
+    all_done = check_all_players_done(players, table_id)
 
     if all_done:
-        await proceed_to_next_stage()
+        proceed_to_next_stage()
         await send_game_stage_cards_and_game_started(community_cards, table_id)
 
         if current_stage == 'River':

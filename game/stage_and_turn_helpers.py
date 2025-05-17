@@ -4,7 +4,7 @@ import logging
 
 from config import ws_manager, configure_logging, GAME_STAGES
 from database.managers import redis_manager
-from exceptions import player_folded, other_turn
+from exceptions import player_folded_or_not_enough_money, other_turn
 
 
 configure_logging()
@@ -30,7 +30,7 @@ async def send_game_stage_global() -> None:
     await ws_manager.broadcast({'game_stage': stage})
 
 
-async def proceed_to_next_stage() -> None:
+def proceed_to_next_stage() -> None:
     global current_stage
     if current_stage < len(GAME_STAGES) - 1:
         current_stage += 1
@@ -45,7 +45,7 @@ def get_next_turn(players: list[dict], table_id: int, current_turn: int) -> int:
     return next_turn
 
 
-async def check_all_players_done(players: list[dict], table_id: int) -> bool:
+def check_all_players_done(players: list[dict], table_id: int) -> bool:
     all_done = True
     for player in players:
         if redis_manager.get_player_folded(table_id, player['username']):
@@ -60,8 +60,8 @@ async def check_all_players_done(players: list[dict], table_id: int) -> bool:
 
 
 async def check_player_right_turn(websocket: WebSocket, table_id: int, username: str) -> bool:
-    if redis_manager.get_player_folded(table_id, username):
-        await websocket.send_text(player_folded)
+    if redis_manager.get_player_folded(table_id, username) or redis_manager.get_player_balance(username) == 0:
+        await websocket.send_text(player_folded_or_not_enough_money)
         return False
 
     players = redis_manager.get_players(table_id)
@@ -101,7 +101,7 @@ async def send_current_turn_and_pot(
     })
 
 
-async def check_single_player_left(players: list[dict], table_id: int) -> str | None:
+def check_single_player_left(players: list[dict], table_id: int) -> str | None:
     active_players = [
         player for player in players
         if not redis_manager.get_player_folded(table_id, player['username'])

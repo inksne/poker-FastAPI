@@ -59,7 +59,7 @@ async def process_raise_bet(
 
     redis_manager.set_player_done_move(table.id, username, True)
 
-    all_done = await check_all_players_done(players, table.id)
+    all_done = check_all_players_done(players, table.id)
 
     logger.debug(f'all done: {all_done}')
 

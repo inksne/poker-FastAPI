@@ -78,7 +78,7 @@ def evaluate_hand(player_cards: list, community_cards: list) -> str:
         return 'Старшая Карта'
     
 
-async def check_player_combinations(players: list, community_cards: dict) -> dict:
+def check_player_combinations(players: list, community_cards: dict) -> dict:
     combinations = {}
     for player in players:
         player_cards = redis_manager.get_player_cards(player['username'])
@@ -150,7 +150,7 @@ def determine_winner(combinations: dict, player_cards: dict, community_cards: di
 
 async def send_player_combinations(websocket: WebSocket, players: list, table_id: int) -> None:
     community_cards = redis_manager.get_community_cards(table_id)
-    combinations = await check_player_combinations(players, community_cards)
+    combinations = check_player_combinations(players, community_cards)
 
     for player in players:
         player_username = player['username']
@@ -186,7 +186,7 @@ async def check_winner_and_end_game(websocket: WebSocket, username: str, players
     community_cards = redis_manager.get_community_cards(table_id)
     player_cards = {player['username']: redis_manager.get_player_cards(player['username']) for player in players}
 
-    combinations = await check_player_combinations(players, community_cards)
+    combinations = check_player_combinations(players, community_cards)
 
     winner = determine_winner(combinations, player_cards, community_cards, table_id)
 

@@ -78,12 +78,12 @@ async def process_call_bet(
 
     redis_manager.set_player_done_move(table.id, username, True)
 
-    all_done = await check_all_players_done(players, table.id)
+    all_done = check_all_players_done(players, table.id)
 
     logger.debug(f'all done: {all_done}')
 
     if all_done:
-        await proceed_to_next_stage()
+        proceed_to_next_stage()
         await send_game_stage_cards_and_game_started(community_cards, table.id)
         redis_manager.remove_raise_amount(table.id)
         redis_manager.set_player_done_move(table.id, username, False)
