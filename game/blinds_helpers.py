@@ -5,7 +5,6 @@ import logging
 from database.models import Table
 from database.managers import redis_manager
 from config import ws_manager, configure_logging
-from exceptions import not_enough_funds_for_big_blind, not_enough_funds_for_small_blind
 
 
 configure_logging()
@@ -48,7 +47,6 @@ def check_player_balance_in_db(username: str, table: Table) -> int:
 
 
 async def process_blind_bets(
-    websocket: WebSocket,
     players: list[dict],
     small_blind_index: int,
     big_blind_index: int,
@@ -62,19 +60,20 @@ async def process_blind_bets(
 
         player_balance = check_player_balance_in_db(username, table)
 
-        if player_balance < small_blind and index == small_blind_index:
-            await websocket.send_text(not_enough_funds_for_small_blind)
-            return
-        if player_balance < big_blind and index == big_blind_index:
-            await websocket.send_text(not_enough_funds_for_big_blind)
-            return
-
         if index == small_blind_index:
-            redis_manager.update_player_balance(username, player_balance, -small_blind)
-            redis_manager.update_pot(table.id, small_blind)
+            if player_balance < small_blind:
+                redis_manager.set_player_balance(username, 0)
+                redis_manager.update_pot(table.id, player_balance)
+            else:
+                redis_manager.update_player_balance(username, player_balance, -small_blind)
+                redis_manager.update_pot(table.id, small_blind)
         elif index == big_blind_index:
-            redis_manager.update_player_balance(username, player_balance, -big_blind)
-            redis_manager.update_pot(table.id, big_blind)
+            if player_balance < big_blind:
+                redis_manager.set_player_balance(username, 0)
+                redis_manager.update_pot(table.id, player_balance)
+            else:
+                redis_manager.update_player_balance(username, player_balance, -big_blind)
+                redis_manager.update_pot(table.id, big_blind)
 
     balance_data = {}
     for player in players:
