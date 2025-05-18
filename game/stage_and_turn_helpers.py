@@ -4,7 +4,7 @@ import logging
 
 from config import ws_manager, configure_logging, GAME_STAGES
 from database.managers import redis_manager
-from exceptions import player_folded_or_not_enough_money, other_turn
+from exceptions import player_folded, other_turn
 
 
 configure_logging()
@@ -60,8 +60,8 @@ def check_all_players_done(players: list[dict], table_id: int) -> bool:
 
 
 async def check_player_right_turn(websocket: WebSocket, table_id: int, username: str) -> bool:
-    if redis_manager.get_player_folded(table_id, username) or redis_manager.get_player_balance(username) == 0:
-        await websocket.send_text(player_folded_or_not_enough_money)
+    if redis_manager.get_player_folded(table_id, username):
+        await websocket.send_text(player_folded)
         return False
 
     players = redis_manager.get_players(table_id)
