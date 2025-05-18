@@ -78,7 +78,7 @@ async def ws_game_page(
 
                 await send_blinds_and_dealer(players_list, dealer_index, small_blind_index, big_blind_index)
 
-                await process_blind_bets(websocket, players_list, small_blind_index, big_blind_index, table)
+                await process_blind_bets(players_list, small_blind_index, big_blind_index, table)
 
                 await send_current_turn_and_pot(players_list, small_blind_index, table_id)
 
