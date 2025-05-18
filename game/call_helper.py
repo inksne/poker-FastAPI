@@ -13,7 +13,7 @@ from .stage_and_turn_helpers import (
 )
 from .card_helpers import check_winner_and_end_game
 from .blinds_helpers import check_player_balance_in_db
-from exceptions import not_enough_funds_for_small_blind, not_enough_funds_for_call, check_done
+from exceptions import check_done
 
 
 configure_logging()
@@ -42,6 +42,8 @@ async def process_call_bet(
     current_stage = redis_manager.get_current_stage(table.id)
 
     logger.debug(f'current_stage: {current_stage}')
+    logger.debug(f'raise_amount: {raise_amount}')
+    logger.debug(f'player_balance: {player_balance}')
 
     if small_blind_index >= len(players):
         small_blind_index = 0
@@ -51,8 +53,11 @@ async def process_call_bet(
     if not raise_amount:
         if current_turn == small_blind_index:
             if player_balance < small_blind:
-                await websocket.send_text(not_enough_funds_for_small_blind)
-                return
+                if current_stage == 'Preflop':
+                    redis_manager.set_player_balance(username, 0)
+                    redis_manager.update_pot(table.id, player_balance)
+                else:
+                    await websocket.send_text(check_done)
             else:
                 if current_stage == 'Preflop':
                     redis_manager.update_player_balance(username, player_balance, -small_blind)
@@ -65,16 +70,16 @@ async def process_call_bet(
 
         else:
             if player_balance < big_blind:
-                await websocket.send_text(not_enough_funds_for_call)
-                return
+                redis_manager.set_player_balance(username, 0)
+                redis_manager.update_pot(table.id, player_balance)
             
     else:
         if player_balance < raise_amount:
-            await websocket.send_text(not_enough_funds_for_call)
-            return
-
-        redis_manager.update_player_balance(username, player_balance, -raise_amount)
-        redis_manager.update_pot(table.id, raise_amount)
+            redis_manager.set_player_balance(username, 0)
+            redis_manager.update_pot(table.id, player_balance)
+        else:
+            redis_manager.update_player_balance(username, player_balance, -raise_amount)
+            redis_manager.update_pot(table.id, raise_amount)
 
     redis_manager.set_player_done_move(table.id, username, True)
 
