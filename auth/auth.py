@@ -97,18 +97,6 @@ async def refresh_jwt(current_user: User = Depends(get_current_auth_user_for_ref
     return response
 
 
-@router.get('/users/me/')
-async def auth_user_check_self_info(
-    payload: dict = Depends(get_current_access_token_payload), 
-    user: User = Depends(get_current_auth_user),
-):
-    iat = payload.get("iat")
-    return {
-        "username": user.username,
-        "email": user.email,
-        "logged_in_at": iat,
-    }
-
 @router.post('/logout')
 async def logout(response: Response):
     response.delete_cookie(key="access_token", httponly=False, secure=False, samesite="Lax")
